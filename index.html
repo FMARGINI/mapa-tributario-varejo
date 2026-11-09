@@ -591,6 +591,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
   const SITN_VAR = {'Atendida':'--ok','Atrasada':'--pend','Em risco':'--warn','No prazo':'--doing','Sem data':'--nav'};
   const SITK2N = {a:'Atendida',l:'Atrasada',r:'Em risco',f:'No prazo',n:'Sem data'};
   let JIRA_DATA = {}, JIRA_SYNC = '';
+  const fmtSync = v => { const m=/^(\d{2})\/(\d{2})\/(\d{4})/.exec(v||''); if(m) return v; const d=new Date(v); return isNaN(d)?(v||''):d.toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}); };
   const FASE_TIPOS = ['Produção','Obrigatoriedade','Efeito legal'];
   const SIT = {a:{t:'Atendidas e entregues',v:'--ok'}, l:{t:'Atrasadas',v:'--pend'}, f:{t:'Futuras',v:'--doing'}};
   const RM = {uni:'todas', ref:''};
@@ -830,7 +831,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     document.querySelectorAll('[data-bkl]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.bkl===BK.lvl));
     document.querySelectorAll('[data-bkz]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.bkz===BK.z));
     const nJ=Object.keys(JIRA_DATA).length;
-    $('bk-info').textContent=BK.demo?'':(nJ?'Jira sincronizado em '+(JIRA_SYNC||'data não informada')+' ('+nJ+' issues).':'Jira ainda não sincronizado: status, sprints, datas e horas aparecem depois da primeira sincronização do serviço local.');
+    $('bk-info').textContent=BK.demo?'':(nJ?'Jira sincronizado em '+(fmtSync(JIRA_SYNC)||'data não informada')+' ('+nJ+' issues).':'Jira ainda não sincronizado: status, sprints, datas e horas aparecem depois da primeira sincronização do serviço local.');
     $('bk-demo').innerHTML=BK.demo?'<div class="bk-demo">Exemplo com dados fictícios (normas reais, issues inventadas; hoje = 09/11/2026). Nada aqui vem do rastreio. <button type="button" id="bk-demo-off">Sair do exemplo</button></div>':'';
     const T=bkTree();
     if(!T.length && !BK.q){
@@ -1190,7 +1191,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
           +'<span class="mono dt">'+esc(fmt(m.iso)||'—')+'</span><span class="desc">'+esc(m.key==='principal'?'Produção do card':m.desc.join(' · '))+'</span>'+stSel+pv+sitTag(m)+esum(ek,m)+'</div>'
           +'<div class="ent-b" id="'+bid+'"'+(op?'':' hidden')+'>'+(op?ibody(ek):'')+'</div></div>'; };
       const semE=all.filter(x=>inG(x,'')), opN=ENTOPEN.has(c.id+'|');
-      const ents='<div class="ents wide"><div class="ents-h"><h4>Entregas e issues ('+ms.length+' '+(ms.length===1?'entrega':'entregas')+' · '+vis.length+' issues)</h4><span class="sync">'+(JIRA_SYNC?'Jira sincronizado em '+esc(new Date(JIRA_SYNC).toLocaleString('pt-BR')):'Jira ainda não sincronizado')+'</span></div>'
+      const ents='<div class="ents wide"><div class="ents-h"><h4>Entregas e issues ('+ms.length+' '+(ms.length===1?'entrega':'entregas')+' · '+vis.length+' issues)</h4><span class="sync">'+(JIRA_SYNC?'Jira sincronizado em '+esc(fmtSync(JIRA_SYNC)):'Jira ainda não sincronizado')+'</span></div>'
         +'<div class="ent-hd" aria-hidden="true"><span></span><span>Exigência</span><span>Entrega</span><span>Status</span><span>Prevista</span><span>Situação</span><span>Issues · horas</span></div>'
         +ms.map(erow).join('')
         +(semE.length?'<div class="ent'+(opN?' open':'')+'"><div class="ent-r"><button type="button" class="car" data-etog="'+c.id+'|" aria-expanded="'+opN+'" aria-label="Mostrar issues sem entrega">▸</button><span class="mono dt">—</span><span class="desc"><b>Issues sem data de entrega</b></span><span></span><span></span><span></span>'+(semE.length?esum('',null):'<span class="hcell">—</span>')+'</div>'
