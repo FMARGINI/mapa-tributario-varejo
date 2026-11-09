@@ -366,7 +366,7 @@ footer{color:var(--muted);font-size:13px}
 .bk-in{position:relative;min-width:max-content}
 .bk-row{display:flex;height:var(--rh);border-bottom:1px solid var(--bk-l2)}
 .bk-row:nth-child(even) .bk-tc{background:var(--bk-alt)}
-.bk-lc{position:sticky;left:0;z-index:3;width:var(--lw);flex:none;display:grid;grid-template-columns:minmax(0,1fr) 72px 72px 116px 124px 104px 84px;align-items:center;background:var(--surface);border-right:2px solid var(--line);font-size:13px}
+.bk-lc{position:sticky;left:0;z-index:3;width:var(--lw);flex:none;display:grid;grid-template-columns:minmax(0,1fr) 82px 82px 116px 124px 104px 84px;align-items:center;background:var(--surface);border-right:2px solid var(--line);font-size:13px}
 .bkr.compact .bk-lc{grid-template-columns:minmax(0,1fr) 124px 104px}
 .bkr.compact .bk-ci,.bkr.compact .bk-cf,.bkr.compact .bk-cj,.bkr.compact .bk-ch{display:none}
 .bk-lc>div{padding:0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
@@ -390,7 +390,8 @@ footer{color:var(--muted);font-size:13px}
 a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underline}
 .l0 .bk-tt{font-weight:700}
 .bk-fr{font-size:10.5px;font-weight:700;border-radius:5px;padding:0 5px;flex:none}.bk-fr.v{background:var(--varejo-t);color:var(--varejo)}.bk-fr.b{background:var(--nvar-t);color:var(--nvar)}
-.bk-dt{font-family:var(--f-mono);font-size:12px}.bk-dt.calc{color:var(--muted);font-style:italic}
+.bk-dt{font-family:var(--f-mono);font-size:12px;letter-spacing:-.2px}
+.bk-lc>div.bk-dt{padding:0 6px;text-overflow:clip}.bk-dt.calc{color:var(--muted);font-style:italic}
 .bk-js{font-size:10.5px;font-weight:800;border-radius:4px;padding:1px 6px;text-transform:uppercase}
 .bk-js.new{background:#DFE1E6;color:#42526E}.bk-js.ind{background:#DEEBFF;color:#0747A6}.bk-js.done{background:#E3FCEF;color:#006644}.bk-js.cancel{background:#EBECF0;color:#5E6C84;text-decoration:line-through}.bk-js.imp{background:#FFEBE6;color:#BF2600}.bk-js.nd{background:transparent;color:var(--muted);border:1px dashed var(--line);text-transform:none;font-weight:600}
 .bk-sit{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600}
@@ -843,7 +844,8 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     // escala: do menor ao maior dado, alinhada na segunda-feira
     const pts=[dN(ref)]; const pick=nd=>{ if(nd.d){ pts.push(dN(nd.d.a),dN(nd.d.b)); } if(nd.lv===1&&nd.e.d) pts.push(dN(nd.e.d)); nd.kids.forEach(pick); }; T.forEach(pick);
     let a0=Math.min(...pts)-14, b0=Math.max(...pts)+30; a0-=(new Date(a0*864e5).getUTCDay()+6)%7; BK.rg=[a0,b0];
-    const p=bkPpd(), W=Math.round((b0-a0+1)*p), X=s=>(dN(s)-a0)*p;
+    const p=bkPpd(); if(BK.z!=='fit'){ const vis=Math.ceil(($('bkr').clientWidth-parseInt(getComputedStyle($('bkr')).getPropertyValue('--lw'))-4)/p); if(b0-a0+1<vis) b0=a0+vis-1; BK.rg=[a0,b0]; }
+    const W=Math.round((b0-a0+1)*p), X=s=>(dN(s)-a0)*p;
     // indicadores (histórias)
     const cnt={atr:0,pa:0,and:0,ini:0,con:0,sus:0,nd:0}; let he=0,hr=0,risco=0;
     const walk=nd=>{ if(nd.leaf) cnt[nd.sit.s]++; nd.kids.forEach(walk); };
@@ -856,14 +858,14 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     // cabeçalho
     let h='<div class="bk-row bk-hdr"><div class="bk-lc"><div>Item</div><div class="bk-ci">Início</div><div class="bk-cf">Fim</div><div class="bk-cj">Status Jira</div><div class="bk-cs">Situação</div><div class="bk-cp">Progresso</div><div class="bk-ch">Horas e/r</div></div><div class="bk-tc" style="width:'+W+'px">', g='';
     for(let d=a0; d<=b0; d++){ const s=nS(d), x=(d-a0)*p;
-      if(s.slice(8)==='01'){ h+='<div class="bk-mo" style="left:'+x+'px">'+MESC[+s.slice(5,7)-1]+'/'+s.slice(2,4)+'</div>'; g+='<div class="bk-g m" style="left:'+x+'px"></div>'; }
+      if(s.slice(8)==='01'){ const mi=+s.slice(5,7), mw=p*30, lab=mw>=50?MESC[mi-1]+'/'+s.slice(2,4):mw>=28?(mi===1?MESC[0]+'/'+s.slice(2,4):MESC[mi-1]):(mi%3===1?MESC[mi-1]+(mi===1?'/'+s.slice(2,4):''):''); if(lab) h+='<div class="bk-mo" style="left:'+x+'px">'+lab+'</div>'; g+='<div class="bk-g m" style="left:'+x+'px"></div>'; }
       if(new Date(d*864e5).getUTCDay()===1 && p*7>=34){ h+='<div class="bk-wk" style="left:'+x+'px">'+s.slice(8)+'/'+MESC[+s.slice(5,7)-1]+'</div>'; if(s.slice(8)!=='01') g+='<div class="bk-g" style="left:'+x+'px"></div>'; } }
     h+='</div></div>';
     const bar=nd=>{ let o='';
       if(nd.d){ const z=BKS[nd.sit.s], l=X(nd.d.a), w=Math.max(4,(dN(nd.d.b)-dN(nd.d.a)+1)*p);
         const tip=(nd.k?nd.k+(nd.j&&nd.j.t?' – '+nd.j.t:''):(nd.lv===1?'Entrega '+(nd.e.d?brS(nd.e.d):'sem data'):nd.n.nome))+'\n'+brS(nd.d.a)+' → '+brS(nd.d.b)+' ('+nd.d.src+')\nSituação: '+z[0];
         const t=nd.cnt.d+nd.cnt.i+nd.cnt.n, pf=t?nd.cnt.d/t*100:0;
-        o+='<div class="bk-bar'+(nd.d.calc?' calc':'')+(nd.lv===0?' thin':'')+'" style="left:'+l+'px;width:'+w+'px;background-color:var('+z[1]+')" title="'+esc(tip)+'">'+(nd.lv>=2&&!nd.hist?'<i class="pf" style="width:'+pf+'%"></i>':'')+'<span>'+(nd.lv===0?'':esc(nd.k||'Entrega'))+'</span></div>'; }
+        o+='<div class="bk-bar'+(nd.d.calc?' calc':'')+(nd.lv===0?' thin':'')+'" style="left:'+l+'px;width:'+w+'px;background-color:var('+z[1]+')" title="'+esc(tip)+'">'+(nd.lv>=2&&!nd.hist?'<i class="pf" style="width:'+pf+'%"></i>':'')+'<span>'+(nd.lv<=1?'':esc(nd.k))+'</span></div>'; }
       else if(nd.lv>=2 && nd.exig) o+='<div class="bk-nod" style="left:'+Math.max(4,X(nd.exig)-170)+'px">sem datas no Jira</div>';
       if(nd.lv===0) nd.n.ent.forEach(e=>{ if(e.d) o+='<i class="bk-mk" style="left:'+X(e.d)+'px" title="Exigência '+brS(e.d)+' – '+esc(e.t)+'"></i>'; });
       if(nd.lv===1 && nd.e.d) o+='<i class="bk-mk" style="left:'+X(nd.e.d)+'px" title="Exigência '+brS(nd.e.d)+'"></i><span class="bk-mkl" style="left:'+X(nd.e.d)+'px">'+brS(nd.e.d)+'</span>';
