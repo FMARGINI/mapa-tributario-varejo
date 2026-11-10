@@ -416,6 +416,9 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
 .pv-r{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:13px}
 .chip.rev{background:var(--pend-t,#FDECEC);color:var(--pend,#B42318);font-weight:700}
 .revw{border:1px solid var(--pend,#B42318);border-left-width:4px;border-radius:8px;padding:8px 12px;font-size:13.5px;background:var(--surface)}
+.bk-fsel{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.bk-fsel button[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:-1px}
+.bk-kpi.cap{border-color:var(--accent)}
 </style>
 
 <div class="wrap">
@@ -510,7 +513,8 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
   <p class="bk-info" id="bk-info"></p>
   <div id="bk-demo"></div>
   <div id="bk-body">
-    <div class="bk-kpis" id="bk-kpis" role="group" aria-label="Histórias por situação (clique para filtrar)"></div>
+    <div class="bk-kpis" id="bk-kpis" role="group" aria-label="Histórias por situação (clique para filtrar; várias somam)"></div>
+    <div class="bk-fsel" id="bk-fsel"></div>
     <div class="bk-tb">
       <div class="bk-grp"><span>Abrir até</span><div class="vtog" id="bk-lvl"><button type="button" data-bkl="0" aria-pressed="false">Normas</button><button type="button" data-bkl="1" aria-pressed="false">Entregas</button><button type="button" data-bkl="2" aria-pressed="true">Épicos</button><button type="button" data-bkl="3" aria-pressed="false">Histórias</button></div></div>
       <div class="bk-grp"><span>Escala</span><div class="vtog" id="bk-zoom"><button type="button" data-bkz="3M" aria-pressed="true">3M</button><button type="button" data-bkz="6M" aria-pressed="false">6M</button><button type="button" data-bkz="1A" aria-pressed="false">1A</button><button type="button" data-bkz="fit" aria-pressed="false">Ajustar</button></div></div>
@@ -750,7 +754,8 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
   }
 
   // ---------------- roadmap do backlog (norma → entrega → épico → história), dados do Jira
-  const BK={lvl:2,z:'3M',cols:(window.innerWidth>=1600?'full':'compact'),q:'',f:'',open:{},demo:false,scrolled:false};
+  const BK={lvl:2,z:'3M',cols:(window.innerWidth>=1600?'full':'compact'),q:'',f:new Set(),open:{},demo:false,scrolled:false};
+  const BK_ABERTO=['atr','pa','and','ini','nd'];
   let JIRA_SPR={};
   const BKS={ini:['A iniciar','--bk-ini','A iniciar'],and:['Em andamento','--bk-and','Em andamento'],pa:['Ponto de atenção','--bk-pa','Atenção'],atr:['Atrasado / Impedido','--bk-atr','Atrasado'],con:['Concluído','--bk-con','Concluído'],sus:['Suspenso / Cancelado','--bk-sus','Cancelado'],nd:['Sem dado do Jira','--nav','Sem dado']};
   const BKO={atr:5,pa:4,and:3,ini:2,con:1,sus:0};
@@ -810,7 +815,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     const j=JIRA_DATA[k]; if(!j) return null;
     const st=j.status||'', cat=j.categoria==='done'?'done':(j.categoria==='new'?'new':'ind');
     const sp=j.sprint||'', spd=JIRA_SPR[sp]||((j.sprint_inicio&&j.sprint_fim)?[j.sprint_inicio,j.sprint_fim]:null);
-    return {t:j.resumo||j.titulo||'',st,c:/cancel|suspens|descart/i.test(st)?'cancel':cat,imp:!!j.impedido||/imped|bloque/i.test(st),sp,spd,ini:j.inicio||'',fim:j.fim||'',e:+j.estimado_h||0,r:+j.realizado_h||0};
+    return {t:j.resumo||j.titulo||'',st,c:/cancel|suspens|descart/i.test(st)?'cancel':cat,imp:!!j.impedido||/imped|bloque/i.test(st),sp,spd,ini:j.inicio||'',fim:j.fim||'',e:+j.estimado_h||0,r:+j.realizado_h||0,rs:(j.restante_h!=null&&j.restante_h!=='')?+j.restante_h:null};
   }
   const bkRef=()=>BK.demo?BKDEMO.ref:(RM.ref||today);
   const bkOkF=fr=>RM.uni==='todas'||(RM.uni==='varejo'&&fr==='Varejo')||(RM.uni==='backoffice'&&fr==='Backoffice');
@@ -859,9 +864,9 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     const hist=(k,fr,exig,lv)=>{ const j=bkJ(k); return {lv,id:k,k,fr,hist:true,j,exig,sit:bkSitH(j,exig,ref),d:bkDH(j),kids:[]}; };
     const T=bkRaw().map(n=>({lv:0,id:'bk-'+n.id,n,kids:n.ent.map((e,i)=>({lv:1,id:'bk-'+n.id+'-'+i,e,n,kids:e.items.map(x=>x.tipo==='hi'?Object.assign(hist(x.key,x.frente,e.d,2),{ver:x.ver}):{lv:2,id:x.key,k:x.key,fr:x.frente,ver:x.ver,j:bkJ(x.key),exig:e.d,kids:x.kids.map(h=>hist(h,x.frente,e.d,3))})}))}));
     const roll=nd=>{
-      if(nd.hist){ nd.leaf=true; const j=nd.j; nd.cnt=(!j||j.c==='cancel')?{d:0,i:0,n:0}:{d:+(j.c==='done'),i:+(j.c==='ind'),n:+(j.c==='new')}; nd.h={e:(!j||j.c==='cancel')?0:j.e,r:j?j.r:0}; return; }
+      if(nd.hist){ nd.leaf=true; const j=nd.j; nd.cnt=(!j||j.c==='cancel')?{d:0,i:0,n:0}:{d:+(j.c==='done'),i:+(j.c==='ind'),n:+(j.c==='new')}; nd.h={e:(!j||j.c==='cancel')?0:j.e,r:j?j.r:0,rs:(!j||j.c==='cancel'||j.c==='done')?0:(j.rs!=null?j.rs:Math.max(0,j.e-j.r))}; return; }
       nd.leaf=nd.lv===2&&!nd.kids.length; nd.kids.forEach(roll);
-      nd.cnt={d:0,i:0,n:0}; nd.h={e:0,r:0}; nd.kids.forEach(c=>{ ['d','i','n'].forEach(t=>nd.cnt[t]+=c.cnt[t]); nd.h.e+=c.h.e; nd.h.r+=c.h.r; });
+      nd.cnt={d:0,i:0,n:0}; nd.h={e:0,r:0,rs:0}; nd.kids.forEach(c=>{ ['d','i','n'].forEach(t=>nd.cnt[t]+=c.cnt[t]); nd.h.e+=c.h.e; nd.h.r+=c.h.r; nd.h.rs+=c.h.rs; });
       const ds=nd.kids.map(c=>c.d).filter(Boolean), j=nd.j;
       if(j && isoD(j.ini) && isoD(j.fim)) nd.d={a:j.ini,b:j.fim,calc:false,src:'datas-alvo do épico'};
       else nd.d=ds.length?{a:nS(Math.min(...ds.map(z=>dN(z.a)))),b:nS(Math.max(...ds.map(z=>dN(z.b)))),calc:true,src:'período das filhas'}:null;
@@ -904,15 +909,18 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     const walk=nd=>{ if(nd.leaf) cnt[nd.sit.s]++; nd.kids.forEach(walk); };
     T.forEach(walk);
     let V=T;
-    if(BK.f){ const kf=nd=>{ nd.kids=nd.kids.filter(kf); return nd.leaf?nd.sit.s===BK.f:nd.kids.length>0; }; V=T.filter(kf); }
+    if(BK.f.size){ const kf=nd=>{ nd.kids=nd.kids.filter(kf); return nd.leaf?BK.f.has(nd.sit.s):nd.kids.length>0; }; V=T.filter(kf); }
+    BK.tree=V;
     // totais do que está na tela (respeitam o filtro de situação e a busca)
-    let he=0,hr=0; const vistos=new Set();
-    const soma=nd=>{ if(nd.hist && !vistos.has(nd.k)){ vistos.add(nd.k); he+=nd.h.e; hr+=nd.h.r; } nd.kids.forEach(soma); };
+    let he=0,hr=0,hs=0; const vistos=new Set(); BK.vis=[];
+    const soma=nd=>{ if(nd.hist && !vistos.has(nd.k)){ vistos.add(nd.k); he+=nd.h.e; hr+=nd.h.r; hs+=nd.h.rs; BK.vis.push(nd); } nd.kids.forEach(soma); };
     V.forEach(soma);
     const risco=V.filter(n=>n.sit.s==='atr'||n.sit.s==='pa').length;
-    const rd=x=>Math.round(x*10)/10, fl=BK.f?' · filtro: '+BKS[BK.f][0].toLowerCase():'';
-    $('bk-kpis').innerHTML=['atr','pa','and','ini','con','sus'].concat(cnt.nd?['nd']:[]).map(s=>'<button type="button" class="bk-kpi" data-bkf="'+s+'" aria-pressed="'+(BK.f===s)+'"><span class="n">'+cnt[s]+'</span><span class="t"><i class="bk-dot" style="background:var('+BKS[s][1]+')"></i>'+BKS[s][0]+'</span></button>').join('')
-      +'<div class="bk-kpi st"><span class="n">'+V.length+'</span><span class="t">Normas · '+risco+' em risco'+fl+'</span></div><div class="bk-kpi st" title="Soma das histórias que aparecem na lista abaixo"><span class="n">'+rd(he)+' / '+rd(hr)+' h</span><span class="t">Estimado / realizado'+fl+'</span></div>';
+    const rd=x=>Math.round(x*10)/10, ab=BK_ABERTO.every(x=>BK.f.has(x))&&BK.f.size===BK_ABERTO.length, fl=BK.f.size?' · '+(ab?'em aberto':[...BK.f].map(x=>BKS[x][2].toLowerCase()).join(' + ')):'';
+    $('bk-kpis').innerHTML=['atr','pa','and','ini','con','sus'].concat(cnt.nd?['nd']:[]).map(s=>'<button type="button" class="bk-kpi" data-bkf="'+s+'" aria-pressed="'+BK.f.has(s)+'"><span class="n">'+cnt[s]+'</span><span class="t"><i class="bk-dot" style="background:var('+BKS[s][1]+')"></i>'+BKS[s][0]+'</span></button>').join('')
+      +'<div class="bk-kpi st"><span class="n">'+V.length+'</span><span class="t">Normas · '+risco+' em risco'+fl+'</span></div><div class="bk-kpi st" title="Soma das histórias que aparecem na lista abaixo"><span class="n">'+rd(he)+' / '+rd(hr)+' h</span><span class="t">Estimado / realizado'+fl+'</span></div>'
+      +'<div class="bk-kpi st cap" title="Horas que faltam nas histórias da lista: Tempo Restante do Jira; sem ele, estimado menos realizado. Concluídas e canceladas contam zero."><span class="n">'+rd(hs)+' h</span><span class="t">Restante (para capacity)'+fl+'</span></div>';
+    $('bk-fsel').innerHTML='<button type="button" data-bkfa="1" aria-pressed="'+ab+'">Em aberto (tudo não concluído)</button>'+(BK.f.size?'<button type="button" data-bkfa="0">Limpar seleção</button>':'')+'<button type="button" id="bk-csv">Baixar CSV da lista</button><span class="note" style="margin:0">Clique em várias situações para somar.</span>';
     // cabeçalho
     let h='<div class="bk-row bk-hdr"><div class="bk-lc"><div>Item</div><div class="bk-ci">Início</div><div class="bk-cf">Fim</div><div class="bk-cj">Status Jira</div><div class="bk-cs">Situação</div><div class="bk-cp">Progresso</div><div class="bk-ch">Horas e/r</div></div><div class="bk-tc" style="width:'+W+'px">', g='';
     for(let d=a0; d<=b0; d++){ const s=nS(d), x=(d-a0)*p;
@@ -928,7 +936,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
       if(nd.lv===0) nd.n.ent.forEach(e=>{ if(e.d) o+='<i class="bk-mk" style="left:'+X(e.d)+'px" title="Exigência '+brS(e.d)+' – '+esc(e.t)+'"></i>'; });
       if(nd.lv===1 && nd.e.d) o+='<i class="bk-mk" style="left:'+X(nd.e.d)+'px" title="Exigência '+brS(nd.e.d)+'"></i><span class="bk-mkl" style="left:'+X(nd.e.d)+'px">'+brS(nd.e.d)+'</span>';
       return o; };
-    const isOpen=nd=>(nd.id in BK.open)?BK.open[nd.id]:(BK.q||BK.f?true:nd.lv<BK.lvl);
+    const isOpen=nd=>(nd.id in BK.open)?BK.open[nd.id]:(BK.q||BK.f.size?true:nd.lv<BK.lvl);
     const sitC=s=>{ const z=BKS[s.s]; return '<div class="bk-sit bk-cs" title="'+esc(z[0]+': '+s.why.join('; '))+'"><i class="bk-dot" style="background:var('+z[1]+')"></i><span class="lbl">'+z[2]+'</span></div>'; };
     const pgC=c=>{ const t=c.d+c.i+c.n; return t?'<div class="bk-pg bk-cp" title="'+c.d+' concluídas, '+c.i+' em andamento, '+c.n+' a fazer"><span class="bk-pgb"><i style="width:'+(c.d/t*100)+'%;background:#36B37E"></i><i style="width:'+(c.i/t*100)+'%;background:#0065FF"></i></span>'+c.d+'/'+t+'</div>':'<div class="bk-pg bk-cp">—</div>'; };
     const hC=x=>(!x.e&&!x.r)?'<div class="bk-hh bk-ch">—</div>':'<div class="bk-hh bk-ch" title="Estimado / realizado"><b>'+rd(x.e)+'</b> / <span class="'+(x.r>x.e?'over':'')+'">'+rd(x.r)+'</span> h</div>';
@@ -950,6 +958,16 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     inner.innerHTML=h+'<div style="position:relative">'+body+'<div style="position:absolute;top:0;bottom:0;left:'+lw+'px;width:'+W+'px;pointer-events:none">'+g+'<div class="bk-now" style="left:'+X(ref)+'px"><b>'+(ref===today||BK.demo?'hoje':'ref. '+brS(ref))+'</b></div></div></div>';
     if(!BK.scrolled){ BK.scrolled=true; bkToday(); } else { r.scrollLeft=keepL; r.scrollTop=keepT; }
   }
+  function bkCsv(){
+    const q=v=>{ v=v==null?'':String(v); return /[;"\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
+    const rows=[['norma','versao_norma','entrega','epico','historia','resumo','frente','status_jira','situacao','sprint','inicio','fim','estimado_h','realizado_h','restante_h']];
+    const pai={}; const marca=(nd,n,e,ep)=>{ if(nd.lv===0) n=nd; if(nd.lv===1) e=nd; if(nd.lv===2&&!nd.hist) ep=nd; if(nd.hist) pai[nd.k]={n,e,ep}; nd.kids.forEach(k=>marca(k,n,e,ep)); };
+    (BK.tree||[]).forEach(nd=>marca(nd));
+    (BK.vis||[]).forEach(h=>{ const p=pai[h.k]||{}, j=h.j||{}, n=p.n?p.n.n:{}, e=p.e?p.e.e:{};
+      rows.push([n.nome,n.ver,e.d?brS(e.d):'sem data',p.ep?p.ep.k:'',h.k,j.t||'',h.fr,j.st||'',BKS[h.sit.s][0],j.sp||'',h.d?brS(h.d.a):'',h.d?brS(h.d.b):'',String(h.h.e).replace('.',','),String(h.h.r).replace('.',','),String(h.h.rs).replace('.',',')]); });
+    const blob=new Blob(['\ufeff'+rows.map(r=>r.map(q).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='backlog_'+today+(BK.f.size?'_'+[...BK.f].join('-'):'')+'.csv'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },500);
+  }
   function bkToday(){ const r=$('bkr'); if(!BK.rg) return; r.scrollLeft=Math.max(0,(dN(bkRef())-BK.rg[0])*bkPpd()-60); }
   document.addEventListener('click',e=>{
     const t=e.target;
@@ -958,10 +976,12 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     const l=t.closest('[data-bkl]'); if(l){ BK.lvl=+l.dataset.bkl; BK.open={}; renderBacklog(); return; }
     const z=t.closest('[data-bkz]'); if(z){ BK.z=z.dataset.bkz; renderBacklog(); bkToday(); return; }
     const c=t.closest('[data-bkc]'); if(c){ BK.cols=c.dataset.bkc; renderBacklog(); return; }
-    const f=t.closest('[data-bkf]'); if(f){ BK.f=BK.f===f.dataset.bkf?'':f.dataset.bkf; BK.open={}; renderBacklog(); return; }
+    const f=t.closest('[data-bkf]'); if(f){ const v=f.dataset.bkf; if(BK.f.has(v)) BK.f.delete(v); else BK.f.add(v); BK.open={}; renderBacklog(); return; }
+    const fa=t.closest('[data-bkfa]'); if(fa){ const on=fa.dataset.bkfa==='1'; const ja=BK_ABERTO.every(x=>BK.f.has(x))&&BK.f.size===BK_ABERTO.length; BK.f=new Set(on&&!ja?BK_ABERTO:[]); BK.open={}; renderBacklog(); return; }
+    if(t.id==='bk-csv'){ bkCsv(); return; }
     if(t.id==='bk-hoje'){ bkToday(); return; }
-    if(t.id==='bk-demo-on'){ BK.demo=true; BK.scrolled=false; BK.open={}; BK.f=''; renderBacklog(); return; }
-    if(t.id==='bk-demo-off'){ BK.demo=false; BK.scrolled=false; BK.open={}; BK.f=''; renderBacklog(); return; }
+    if(t.id==='bk-demo-on'){ BK.demo=true; BK.scrolled=false; BK.open={}; BK.f=new Set(); renderBacklog(); return; }
+    if(t.id==='bk-demo-off'){ BK.demo=false; BK.scrolled=false; BK.open={}; BK.f=new Set(); renderBacklog(); return; }
   });
   document.addEventListener('input',e=>{ if(e.target.id==='bk-q'){ BK.q=e.target.value; renderBacklog(); } });
   { let rt; window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(renderBacklog,150); }); }
