@@ -900,14 +900,19 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     const p=bkPpd(); if(BK.z!=='fit'){ const vis=Math.ceil(($('bkr').clientWidth-parseInt(getComputedStyle($('bkr')).getPropertyValue('--lw'))-4)/p); if(b0-a0+1<vis) b0=a0+vis-1; BK.rg=[a0,b0]; }
     const W=Math.round((b0-a0+1)*p), X=s=>(dN(s)-a0)*p;
     // indicadores (histórias)
-    const cnt={atr:0,pa:0,and:0,ini:0,con:0,sus:0,nd:0}; let he=0,hr=0,risco=0;
+    const cnt={atr:0,pa:0,and:0,ini:0,con:0,sus:0,nd:0};
     const walk=nd=>{ if(nd.leaf) cnt[nd.sit.s]++; nd.kids.forEach(walk); };
-    T.forEach(n=>{ walk(n); he+=n.h.e; hr+=n.h.r; if(n.sit.s==='atr'||n.sit.s==='pa') risco++; });
-    const rd=x=>Math.round(x*10)/10;
-    $('bk-kpis').innerHTML=['atr','pa','and','ini','con','sus'].concat(cnt.nd?['nd']:[]).map(s=>'<button type="button" class="bk-kpi" data-bkf="'+s+'" aria-pressed="'+(BK.f===s)+'"><span class="n">'+cnt[s]+'</span><span class="t"><i class="bk-dot" style="background:var('+BKS[s][1]+')"></i>'+BKS[s][0]+'</span></button>').join('')
-      +'<div class="bk-kpi st"><span class="n">'+T.length+'</span><span class="t">Normas · '+risco+' em risco</span></div><div class="bk-kpi st"><span class="n">'+rd(he)+' / '+rd(hr)+' h</span><span class="t">Estimado / realizado</span></div>';
+    T.forEach(walk);
     let V=T;
     if(BK.f){ const kf=nd=>{ nd.kids=nd.kids.filter(kf); return nd.leaf?nd.sit.s===BK.f:nd.kids.length>0; }; V=T.filter(kf); }
+    // totais do que está na tela (respeitam o filtro de situação e a busca)
+    let he=0,hr=0; const vistos=new Set();
+    const soma=nd=>{ if(nd.hist && !vistos.has(nd.k)){ vistos.add(nd.k); he+=nd.h.e; hr+=nd.h.r; } nd.kids.forEach(soma); };
+    V.forEach(soma);
+    const risco=V.filter(n=>n.sit.s==='atr'||n.sit.s==='pa').length;
+    const rd=x=>Math.round(x*10)/10, fl=BK.f?' · filtro: '+BKS[BK.f][0].toLowerCase():'';
+    $('bk-kpis').innerHTML=['atr','pa','and','ini','con','sus'].concat(cnt.nd?['nd']:[]).map(s=>'<button type="button" class="bk-kpi" data-bkf="'+s+'" aria-pressed="'+(BK.f===s)+'"><span class="n">'+cnt[s]+'</span><span class="t"><i class="bk-dot" style="background:var('+BKS[s][1]+')"></i>'+BKS[s][0]+'</span></button>').join('')
+      +'<div class="bk-kpi st"><span class="n">'+V.length+'</span><span class="t">Normas · '+risco+' em risco'+fl+'</span></div><div class="bk-kpi st" title="Soma das histórias que aparecem na lista abaixo"><span class="n">'+rd(he)+' / '+rd(hr)+' h</span><span class="t">Estimado / realizado'+fl+'</span></div>';
     // cabeçalho
     let h='<div class="bk-row bk-hdr"><div class="bk-lc"><div>Item</div><div class="bk-ci">Início</div><div class="bk-cf">Fim</div><div class="bk-cj">Status Jira</div><div class="bk-cs">Situação</div><div class="bk-cp">Progresso</div><div class="bk-ch">Horas e/r</div></div><div class="bk-tc" style="width:'+W+'px">', g='';
     for(let d=a0; d<=b0; d++){ const s=nS(d), x=(d-a0)*p;
