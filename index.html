@@ -408,6 +408,12 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
 .bk-row.hit .bk-lc{box-shadow:inset 3px 0 0 var(--accent)}
 .bk-empty{border:1px dashed var(--line);border-radius:10px;padding:14px;margin-top:12px;font-size:14px;display:grid;gap:8px;justify-items:start}
 @media (max-width:700px){.bkr,.bkr.compact{--lw:230px}.bk-lc,.bkr.compact .bk-lc{grid-template-columns:minmax(0,1fr) 34px}.bk-ci,.bk-cf,.bk-cj,.bk-ch,.bk-cp{display:none}.bk-sit .lbl{display:none}.bk-it .bk-ty,.bk-it .bk-fr{display:none}.bk-row.l2 .bk-tt,.bk-row.l3 .bk-tt{display:none}.bk-tb input[type=search]{width:160px}}
+.vv{display:inline-block;font-family:var(--f-mono);font-size:11px;font-weight:700;border-radius:5px;padding:0 5px;margin:0 4px;background:var(--nav-t);color:var(--ink);white-space:nowrap}
+.vv.old{background:var(--warn-t);color:var(--warn)}
+.ent.old .ent-r{background:repeating-linear-gradient(135deg,transparent 0 8px,var(--nav-t) 8px 9px)}
+.pver{border:1px solid var(--line);border-radius:10px;padding:8px 12px;display:grid;gap:4px}
+.pver h4{margin:0 0 2px;font-size:13px}
+.pv-r{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:13px}
 </style>
 
 <div class="wrap">
@@ -615,13 +621,15 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
   const mkOf = (src,id) => { const m=((src.itens[id]||{}).marcos)||{}; const o={}; Object.keys(m).sort().forEach(k=>{ const x=m[k]||{}; if((x.status&&x.status!=='Não avaliado')||x.prevista) o[k]={status:x.status||'Não avaliado',prevista:x.prevista||''}; }); return JSON.stringify(o); };
   // issues da norma: { 'DVARPR-2075': {frente:'Varejo', entrega:'2026-11-16' | ''} }
   // issues da norma: { 'DVARPR-3250': {tipo:'ep'|'hi', frente:'Varejo'|'Backoffice', entrega:'AAAA-MM-DD'|'', pai:'<épico>'|'', origem:'manual'|'jira', oculta:true?} }
-  const isOf = (src,id) => { const m=((src.itens[id]||{}).issues)||{}; const o={}; Object.keys(m).sort().forEach(k=>{ const x=m[k]||{}; const r={tipo:x.tipo||'hi',frente:x.frente||'Varejo',entrega:x.entrega||'',pai:x.pai||'',origem:x.origem||'manual'}; if(x.oculta) r.oculta=true; o[k]=r; }); return JSON.stringify(o); };
+  const isOf = (src,id) => { const m=((src.itens[id]||{}).issues)||{}; const o={}; Object.keys(m).sort().forEach(k=>{ const x=m[k]||{}; const r={tipo:x.tipo||'hi',frente:x.frente||'Varejo',entrega:x.entrega||'',pai:x.pai||'',origem:x.origem||'manual'}; if(x.oculta) r.oculta=true; if(x.versao) r.versao=x.versao; o[k]=r; }); return JSON.stringify(o); };
   // lista efetiva: cadastradas + filhas dos épicos trazidas pela sincronização com o Jira (sem duplicar)
   function effIssues(id){
     const st=((cur.itens[NK(id)]||{}).issues)||{};
     const out=Object.keys(st).map(k=>({key:k,tipo:st[k].tipo||'hi',frente:st[k].frente||'Varejo',entrega:st[k].entrega||'',pai:st[k].pai||'',origem:st[k].origem||'manual',oculta:!!st[k].oculta}));
     out.filter(x=>x.tipo==='ep').forEach(ep=>{ const j=JIRA_DATA[ep.key]; ((j&&j.filhos)||[]).forEach(f=>{ const ex=out.find(x=>x.key===f); if(!ex) out.push({key:f,tipo:'hi',frente:ep.frente,entrega:ep.entrega,pai:ep.key,origem:'jira',oculta:false,virtual:true}); else if(!ex.pai && ex.tipo==='hi') ex.pai=ep.key; }); });
     out.forEach(x=>{ if(x.pai){ const p=out.find(y=>y.key===x.pai); if(p){ x.entrega=p.entrega; } else x.pai=''; } });
+    const k=NK(id); out.forEach(x=>{ const sx=st[x.key]; x.ver = (sx&&sx.versao) || (x.pai ? '' : verIssue(k,{key:x.key,entrega:x.entrega},st)); });
+    out.forEach(x=>{ if(!x.ver && x.pai){ const p=out.find(y=>y.key===x.pai); x.ver=p?p.ver:''; } });
     return out;
   }
   const issuesOf = id => effIssues(id).filter(x=>!x.oculta);
@@ -634,7 +642,33 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
 
   // ---------- marcos (entregas) de uma norma vigente
   const isoAny = s => { const m=String(s||'').match(/(\d{2})\/(\d{2})\/(\d{4})/); if(m) return m[3]+'-'+m[2]+'-'+m[1]; const y=String(s||'').match(/\b(20\d\d)\b/); return y? y[1]+'-01-01' : ''; };
+  // ---------- versões: cada issue grava a versão da norma que atende (ex.: 'v1.00')
+  const ISO_RE=/^\d{4}-\d{2}-\d{2}$/;
+  const verTxt = c => !c ? '' : (c.versao==='Sem versão' ? 'card '+c.id : 'v'+c.versao);
+  const cardsOfK = k => DATA.cards.filter(c=>c.nkey===k).sort((a,b)=>a.id<b.id?-1:1);
+  const vigOfK = k => DATA.cards.find(c=>c.nkey===k && c.vigente);
+  const mkey = (c,m) => m.key==='principal'?pkeyOf(c):m.key;
+  // versão "dona" de uma data: a mais antiga que já exigia essa data
+  function verDaData(k,d){ for(const x of cardsOfK(k)){ if(marcosBase(x).some(m=>mkey(x,m)===d)) return x; } return null; }
+  function verIssue(k,x,st){ if(x.versao) return x.versao; st=st||((cur.itens[k]||{}).issues)||{};
+    if(x.pai && st[x.pai]) return verIssue(k,Object.assign({key:x.pai},st[x.pai]),st);
+    const c=(x.entrega&&ISO_RE.test(x.entrega)&&verDaData(k,x.entrega))||vigOfK(k); return verTxt(c); }
+  // marcos da versão vigente + entregas de versões anteriores que têm registro (status, prevista ou issues)
   function marcosDe(c){
+    const out=marcosBase(c);
+    if(!c.vigente) return out;
+    const k=c.nkey, it=cur.itens[k]||{}, vc=verTxt(c), have=new Set(out.map(m=>mkey(c,m)));
+    out.forEach(m=>m.ver=vc);
+    const ds=new Set();
+    Object.keys(it.marcos||{}).forEach(d=>{ const x=it.marcos[d]||{}; if((x.status&&x.status!=='Não avaliado')||x.prevista) ds.add(d); });
+    Object.values(it.issues||{}).forEach(x=>{ if(x&&x.entrega) ds.add(x.entrega); });
+    [...ds].filter(d=>ISO_RE.test(d)&&!have.has(d)).forEach(d=>{
+      const oc=verDaData(k,d), om=oc&&marcosBase(oc).find(m=>mkey(oc,m)===d), vt=oc?verTxt(oc):'versão anterior';
+      out.push({key:d, iso:d, label:'Versão anterior', old:true, ver:vt, desc:[(om?(om.key==='principal'?'Produção':'Fase'):'Entrega')+' da '+vt+' (versão anterior)']});
+    });
+    return out.sort((a,b)=>(a.iso||'9999')<(b.iso||'9999')?-1:(a.iso||'9999')>(b.iso||'9999')?1:0);
+  }
+  function marcosBase(c){
     const p=iso(c.vig_p);
     const out=[{key:'principal', iso:p, label:'Produção do card', desc:['Vigência de produção informada no card']}];
     const g={};
@@ -772,7 +806,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
       L.forEach(x=>{ if(x.tipo==='hi' && x.pai && L.some(y=>y.key===x.pai)) return;
         const ed=/^\d{4}-\d{2}-\d{2}$/.test(x.entrega||'')?x.entrega:''; (g[ed]=g[ed]||[]).push({key:x.key,tipo:x.tipo,frente:x.frente,kids:x.tipo==='ep'?L.filter(y=>y.pai===x.key&&y.tipo==='hi').map(y=>y.key).sort():[]}); });
       const ent=Object.keys(g).sort((a,b)=>(a||'9')<(b||'9')?-1:1).map(d=>{ const m=ms.find(z=>z.iso===d);
-        return {d, t:!d?'Sem data de entrega':(m?(m.key==='principal'?'Produção':'Fase posterior'):'Entrega'), items:g[d].sort((a,b)=>a.tipo===b.tipo?(a.key<b.key?-1:1):(a.tipo==='ep'?-1:1))}; });
+        return {d, t:!d?'Sem data de entrega':(m?(m.old?'Versão anterior ('+m.ver+')':(m.key==='principal'?'Produção':'Fase posterior')):'Entrega'), items:g[d].sort((a,b)=>a.tipo===b.tipo?(a.key<b.key?-1:1):(a.tipo==='ep'?-1:1))}; });
       out.push({id:c.id,cid:c.id,nome:c.chave+(c.versao&&/^\d/.test(c.versao)?' v'+c.versao:''),ent});
     });
     return out.sort((a,b)=>{ const x=a.ent[0].d||'9', y=b.ent[0].d||'9'; return x<y?-1:x>y?1:0; });
@@ -1161,7 +1195,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
       const irow=(x,kid)=>{ const j=jd(x.key), kids=all.filter(y=>y.pai===x.key); const h=x.tipo==='ep'?sumH(kids):{e:j?+j.estimado_h||0:0,r:j?+j.realizado_h||0:0};
         const act=x.origem==='jira'?'<button type="button" class="x" data-ihide="'+esc(x.key)+'" data-ik="'+c.id+'" title="'+(x.oculta?'Voltar a contar nesta norma':'Ocultar desta norma (não altera o Jira)')+'" aria-label="'+(x.oculta?'Mostrar ':'Ocultar ')+esc(x.key)+'">'+(x.oculta?'↺':'⊘')+'</button>'
                                    :'<button type="button" class="x" data-idel="'+esc(x.key)+'" data-ik="'+c.id+'" title="Remover '+esc(x.key)+'" aria-label="Remover '+esc(x.key)+'">×</button>';
-        return '<tr class="'+(x.tipo==='ep'?'ep':'')+(kid?' kid':'')+(x.oculta?' hid':'')+'"><td><span class="typ '+(x.tipo==='ep'?'t-ep':'t-hi')+'">'+(x.tipo==='ep'?'Épico':'História')+'</span><a class="mono k" href="'+JIRA+encodeURIComponent(x.key)+'" target="_blank" rel="noopener">'+esc(x.key)+'</a><span class="fr '+(x.frente==='Backoffice'?'fr-b':'fr-v')+'">'+esc(x.frente)+'</span>'+(x.tipo==='ep'&&kids.length?' <span class="org">· '+kids.filter(y=>!y.oculta).length+' hist.</span>':'')+'</td>'
+        return '<tr class="'+(x.tipo==='ep'?'ep':'')+(kid?' kid':'')+(x.oculta?' hid':'')+'"><td><span class="typ '+(x.tipo==='ep'?'t-ep':'t-hi')+'">'+(x.tipo==='ep'?'Épico':'História')+'</span><a class="mono k" href="'+JIRA+encodeURIComponent(x.key)+'" target="_blank" rel="noopener">'+esc(x.key)+'</a>'+(x.ver&&(!kid||x.ver!==(all.find(y=>y.key===x.pai)||{}).ver)?'<span class="vv" title="Versão da norma que esta issue atende">'+esc(x.ver)+'</span>':'')+'<span class="fr '+(x.frente==='Backoffice'?'fr-b':'fr-v')+'">'+esc(x.frente)+'</span>'+(x.tipo==='ep'&&kids.length?' <span class="org">· '+kids.filter(y=>!y.oculta).length+' hist.</span>':'')+'</td>'
           +'<td><span class="org'+(x.origem==='jira'?' j':'')+'">'+(x.origem==='jira'?(x.oculta?'do Jira · oculta':'do Jira'):'manual')+'</span></td>'
           +'<td>'+jst(x.key)+'</td><td>'+(j&&j.sprint?esc(j.sprint):'—')+'</td>'
           +'<td class="n">'+(h.e?h.e+' h':'—')+'</td><td class="n">'+(h.e||h.r?(h.r>h.e&&h.e?'<span class="over">'+h.r+' h</span>':h.r+' h'):'—')+pct(h.r,h.e)+'</td>'
@@ -1190,10 +1224,16 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
         const pv = m.key==='principal'
           ? '<input type="date" data-k="'+c.id+'" data-f="entrega_prevista" value="'+esc(s.prevista)+'" aria-label="Prevista">'
           : '<input type="date" data-k="'+c.id+'" data-m="'+m.key+'" data-f="prevista" value="'+esc(s.prevista)+'" aria-label="Prevista">';
-        return '<div class="ent'+(op?' open':'')+'"><div class="ent-r"><button type="button" class="car" data-etog="'+c.id+'|'+ek+'" aria-expanded="'+op+'" aria-controls="'+bid+'" aria-label="Mostrar issues da entrega de '+esc(fmt(m.iso)||'sem data')+'">▸</button>'
-          +'<span class="mono dt">'+esc(fmt(m.iso)||'—')+'</span><span class="desc">'+esc(m.key==='principal'?'Produção do card':m.desc.join(' · '))+'</span>'+stSel+pv+sitTag(m)+esum(ek,m)+'</div>'
+        return '<div class="ent'+(op?' open':'')+(m.old?' old':'')+'"><div class="ent-r"><button type="button" class="car" data-etog="'+c.id+'|'+ek+'" aria-expanded="'+op+'" aria-controls="'+bid+'" aria-label="Mostrar issues da entrega de '+esc(fmt(m.iso)||'sem data')+'">▸</button>'
+          +'<span class="mono dt">'+esc(fmt(m.iso)||'—')+'</span><span class="desc">'+(m.old?'<span class="vv old">'+esc(m.ver)+'</span> ':'')+esc(m.key==='principal'?'Produção do card':m.desc.join(' · '))+'</span>'+stSel+pv+sitTag(m)+esum(ek,m)+'</div>'
           +'<div class="ent-b" id="'+bid+'"'+(op?'':' hidden')+'>'+(op?ibody(ek):'')+'</div></div>'; };
       const semE=all.filter(x=>inG(x,'')), opN=ENTOPEN.has(c.id+'|');
+      const vers=[...new Set(ms.map(m=>m.ver).concat(vis.map(x=>x.ver)).filter(Boolean))];
+      const porVer = vers.length>1 ? '<div class="pver wide"><h4>Por versão</h4>'+vers.map(v=>{ const iv=vis.filter(x=>x.ver===v), hh=sumH(iv), ne=iv.filter(x=>x.tipo==='ep').length;
+          const mv=ms.filter(m=>m.ver===v).map(m=>sitOf(c,m,ref)).filter(Boolean), ea=mv.filter(r=>r.sit==='a').length;
+          const pend=(mv.length-ea)+(hh.s?hh.n-hh.d:0), aguard=hh.n-hh.s;
+          const st= pend? '<span class="sit s-l">'+pend+' pendência(s)</span>' : (aguard? '<span class="sit s-n">aguardando Jira</span>' : '<span class="sit s-a">sem pendências</span>');
+          return '<div class="pv-r"><span class="vv">'+esc(v)+'</span><span>'+ne+' ép. · '+(hh.s?hh.d+' de '+hh.n+' hist. concluídas':hh.n+' hist.')+' · '+ea+' de '+mv.length+' entrega(s) atendida(s)'+(hh.s?' · '+hh.r+' h':'')+'</span>'+st+'</div>'; }).join('')+'</div>' : '';
       const ents='<div class="ents wide"><div class="ents-h"><h4>Entregas e issues ('+ms.length+' '+(ms.length===1?'entrega':'entregas')+' · '+vis.length+' issues)</h4><span class="sync">'+(JIRA_SYNC?'Jira sincronizado em '+esc(fmtSync(JIRA_SYNC)):'Jira ainda não sincronizado')+'</span></div>'
         +'<div class="ent-hd" aria-hidden="true"><span></span><span>Exigência</span><span>Entrega</span><span>Status</span><span>Prevista</span><span>Situação</span><span>Issues · horas</span></div>'
         +ms.map(erow).join('')
@@ -1204,7 +1244,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
         +'<label class="obsf">Observação'+inp('obs','evidência, justificativa, pendência…')+'</label>'
         +'<div class="card2"><div class="t">Situação da norma (pelas entregas)</div><div class="l">'+(nsit?'<span class="sit s-'+nsit+'">'+SITK2N[nsit].toLowerCase()+'</span>':'<span class="sit s-n">sem entregas</span>')+'<span><b>'+nat+'</b> de <b>'+nval+'</b> entregas atendidas'+(nna?' ('+nna+' não se aplica)':'')+'</span></div><div class="bar">'+sbar+'</div></div>'
         +'<div class="card2"><div class="t">Esforço da norma <span class="tagj">do Jira</span></div><div class="l">'+esf+'</div>'+ebar+'</div>'
-        +ents
+        +porVer+ents
         +(t._por?'<div class="audit wide">Salvo por '+esc(t._por)+(t._em?' em '+esc(new Date(t._em).toLocaleString('pt-BR')):'')+'</div>':'')
         +'</div>'
         +(needsReview(c)?(()=>{ const r=byId[cur.itens[NK(c.id)].revisado]||{}; return '<div class="prev">Nova versão v'+esc(c.versao)+' ('+c.id+') desde a última revisão'+(r.id?' (v'+esc(r.versao)+', card '+r.id+')':'')+'. Escopo, issues e entregas com a mesma data foram mantidos; entregas com data nova entraram como "Não avaliado". Confira se o que já foi entregue continua valendo nesta versão. <button type="button" data-rev="'+c.id+'">Marcar como revisada</button></div>'; })():'');
@@ -1384,6 +1424,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
       }
       const now=new Date().toISOString(), por=FB.user.email, up={};
       ids.forEach(id=>{
+        const iss=(cur.itens[id]||{}).issues; if(iss) Object.keys(iss).forEach(kk=>{ const x=iss[kk]; if(x && !x.versao){ const v=verIssue(id,Object.assign({key:kk},x),iss); if(v) x.versao=v; } });
         const novo=clean(cur.itens[id]), antes=clean(base.itens[id]);
         const hk=now.replace(/[-:.TZ]/g,'')+Math.random().toString(36).slice(2,6);
         up['rastreio/itens/'+id]= Object.keys(novo).length? Object.assign(novo,{_por:por,_em:now}) : null;
@@ -1469,7 +1510,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     const q=s=>document.querySelector(s+'[data-ie="'+ek+'"]');
     const inp=q('[data-iadd="'+id+'"]'), tp=q('[data-ityp="'+id+'"]').value, fr=q('[data-ifr="'+id+'"]').value;
     const {ok,msg}=parseKeys(inp.value,id); if(!inp.value.trim()) return;
-    if(ok.length) issEdit(id, is=>ok.forEach(k=>is[k]={tipo:tp,frente:fr,entrega:ek,pai:'',origem:'manual'}));
+    if(ok.length) issEdit(id, is=>ok.forEach(k=>is[k]={tipo:tp,frente:fr,entrega:ek,pai:'',origem:'manual',versao:verTxt(byId[id])}));
     ENTOPEN.add(id+'|'+ek); const keep=ok.length?'':inp.value;
     issRerender(id, ek, msg, '[data-iadd="'+id+'"][data-ie="'+ek+'"]');
     if(keep){ const el=document.querySelector('[data-iadd="'+id+'"][data-ie="'+ek+'"]'); if(el) el.value=keep; }
@@ -1477,7 +1518,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
   function issAddKids(id, ep){
     const inp=document.querySelector('[data-ihadd="'+ep+'"][data-ik="'+id+'"]'); if(!inp.value.trim()) return;
     const e=effIssues(id).find(x=>x.key===ep); const {ok,msg}=parseKeys(inp.value,id);
-    if(ok.length) issEdit(id, is=>ok.forEach(k=>is[k]={tipo:'hi',frente:e.frente,entrega:e.entrega,pai:ep,origem:'manual'}));
+    if(ok.length) issEdit(id, is=>ok.forEach(k=>is[k]={tipo:'hi',frente:e.frente,entrega:e.entrega,pai:ep,origem:'manual',versao:e.ver||verTxt(byId[id])}));
     ENTOPEN.add(id+'|'+e.entrega); issRerender(id, e.entrega, msg, '[data-ihadd="'+ep+'"][data-ik="'+id+'"]');
   }
   document.addEventListener('click',e=>{
@@ -1522,11 +1563,11 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     const cols=['id','mes','ano','documento','chave','tema','uf','versao','vigente','superada_por','titulo','vig_h','vig_p','escopo','situacao','issues','horas_estimadas','horas_realizadas','obs'];
     download('nt_rastreio_'+today+'.csv',[cols.join(';')].concat(DATA.cards.map(c=>{ const t=c.vigente?(()=>{ const l=issuesOf(c.id), h=sumH(l); return Object.assign(get(c.id),{situacao:sitLabel(c),issues:l.map(x=>x.key).join(', '),horas_estimadas:h.s?h.e:'',horas_realizadas:h.s?h.r:''}); })():{}; const r=Object.assign({},c,{vigente:c.vigente?'S':'N'},t); return cols.map(k=>q(r[k])).join(';'); })));
     // uma linha por issue × norma (base do painel de esforço; colunas do Jira preenchidas na fase 2)
-    const ic=['norma','id_norma_vigente','documento','uf','escopo','entrega_data','entrega_descricao','status_entrega','issue','tipo','epico_pai','frente','origem','oculta','status_jira','categoria_jira','sprint','horas_estimadas','horas_realizadas'];
+    const ic=['norma','id_norma_vigente','documento','uf','escopo','entrega_data','entrega_descricao','status_entrega','issue','versao','tipo','epico_pai','frente','origem','oculta','status_jira','categoria_jira','sprint','horas_estimadas','horas_realizadas'];
     const irows=[];
     DATA.cards.filter(c=>c.vigente).forEach(c=>{ const t=get(c.id), ms=marcosDe(c);
       effIssues(c.id).forEach(x=>{ const m=ms.find(m=>(m.key==='principal'?pkeyOf(c):m.key)===x.entrega), j=jd(x.key)||{};
-        irows.push([c.chave,c.id,c.documento,c.uf||'Nacional',t.escopo,x.entrega?fmt(x.entrega):'sem entrega',m?(m.key==='principal'?'Produção do card':m.desc.join(' | ')):'',m?mState(c,m).status:'',x.key,x.tipo==='ep'?'Épico':'História',x.pai,x.frente,x.origem==='jira'?'do Jira':'manual',x.oculta?'S':'N',j.status||'',j.categoria||'',j.sprint||'',x.tipo==='hi'&&j.estimado_h!=null?j.estimado_h:'',x.tipo==='hi'&&j.realizado_h!=null?j.realizado_h:''].map(q).join(';')); }); });
+        irows.push([c.chave,c.id,c.documento,c.uf||'Nacional',t.escopo,x.entrega?fmt(x.entrega):'sem entrega',m?(m.key==='principal'?'Produção do card':m.desc.join(' | ')):'',m?mState(c,m).status:'',x.key,x.ver||'',x.tipo==='ep'?'Épico':'História',x.pai,x.frente,x.origem==='jira'?'do Jira':'manual',x.oculta?'S':'N',j.status||'',j.categoria||'',j.sprint||'',x.tipo==='hi'&&j.estimado_h!=null?j.estimado_h:'',x.tipo==='hi'&&j.realizado_h!=null?j.realizado_h:''].map(q).join(';')); }); });
     setTimeout(()=>download('nt_issues_'+today+'.csv',[ic.join(';')].concat(irows)),600);
     const ref=RM.ref||today, ec=['id_norma','chave','documento','escopo','marco','data_exigencia','descricao','status','entrega_prevista','situacao','em_risco','data_referencia'];
     const rows=[];
