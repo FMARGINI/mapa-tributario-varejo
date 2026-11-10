@@ -432,6 +432,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
   <button type="button" class="primary" id="b-save" hidden disabled>Salvar</button>
 </section>
 <div class="msg warn" id="conf" hidden></div>
+<div class="msg warn" id="dupw" hidden></div>
 <div class="msg" id="msg" role="status" aria-live="polite"></div>
 <section id="out" hidden><textarea id="json" readonly aria-label="Conteúdo do arquivo de rastreio"></textarea></section>
 <details class="help panel" id="help-fb" hidden>
@@ -626,13 +627,26 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
   function effIssues(id){
     const st=((cur.itens[NK(id)]||{}).issues)||{};
     const out=Object.keys(st).map(k=>({key:k,tipo:st[k].tipo||'hi',frente:st[k].frente||'Varejo',entrega:st[k].entrega||'',pai:st[k].pai||'',origem:st[k].origem||'manual',oculta:!!st[k].oculta}));
-    out.filter(x=>x.tipo==='ep').forEach(ep=>{ const j=JIRA_DATA[ep.key]; ((j&&j.filhos)||[]).forEach(f=>{ const ex=out.find(x=>x.key===f); if(!ex) out.push({key:f,tipo:'hi',frente:ep.frente,entrega:ep.entrega,pai:ep.key,origem:'jira',oculta:false,virtual:true}); else if(!ex.pai && ex.tipo==='hi') ex.pai=ep.key; }); });
+    const meK=NK(id);
+    out.filter(x=>x.tipo==='ep').forEach(ep=>{ const j=JIRA_DATA[ep.key]; ((j&&j.filhos)||[]).forEach(f=>{ const ex=out.find(x=>x.key===f); if(!ex && explicitOwners(f).some(k=>k!==meK)) return; if(!ex) out.push({key:f,tipo:'hi',frente:ep.frente,entrega:ep.entrega,pai:ep.key,origem:'jira',oculta:false,virtual:true}); else if(!ex.pai && ex.tipo==='hi') ex.pai=ep.key; }); });
     out.forEach(x=>{ if(x.pai){ const p=out.find(y=>y.key===x.pai); if(p){ x.entrega=p.entrega; } else x.pai=''; } });
     const k=NK(id); out.forEach(x=>{ const sx=st[x.key]; x.ver = (sx&&sx.versao) || (x.pai ? '' : verIssue(k,{key:x.key,entrega:x.entrega},st)); });
     out.forEach(x=>{ if(!x.ver && x.pai){ const p=out.find(y=>y.key===x.pai); x.ver=p?p.ver:''; } });
     return out;
   }
   const issuesOf = id => effIssues(id).filter(x=>!x.oculta);
+  const semAc = s => String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  // ---------- unicidade: cada issue pode estar em uma única norma
+  function explicitOwners(key){ const o=[]; Object.keys(cur.itens).forEach(k=>{ const is=(cur.itens[k]||{}).issues; if(is&&is[key]) o.push(k); }); return o; }
+  function ownersOf(key){ const o=new Set(explicitOwners(key));
+    Object.keys(cur.itens).forEach(k=>{ const is=(cur.itens[k]||{}).issues||{}; Object.keys(is).forEach(ek=>{ const x=is[ek]; if(x&&x.tipo==='ep'&&!x.oculta){ const j=JIRA_DATA[ek]; if(j&&(j.filhos||[]).includes(key)&&!((is[key]||{}).oculta)) o.add(k); } }); });
+    return [...o]; }
+  const nomeK = k => { const c=vigOfK(k); return c?c.chave:k; };
+  function duplicadas(){ const vis=new Map();
+    Object.keys(cur.itens).forEach(k=>{ const c=vigOfK(k); if(!c) return; issuesOf(c.id).forEach(x=>{ if(!vis.has(x.key)) vis.set(x.key,new Set()); vis.get(x.key).add(k); }); });
+    return [...vis.entries()].filter(([,s])=>s.size>1).map(([key,s])=>({key,normas:[...s]})); }
+  function renderDup(){ const el=$('dupw'); if(!el) return; const d=duplicadas(); el.hidden=!d.length; if(!d.length){ el.innerHTML=''; return; }
+    el.innerHTML='<b>Issue em mais de uma norma ('+d.length+'):</b> cada issue deve ficar em uma única norma. '+d.slice(0,8).map(x=>esc(x.key)+' → '+x.normas.map(k=>{ const c=vigOfK(k); return c?'<a href="#nt-'+c.id+'" data-jump="'+c.id+'">'+esc(c.chave)+'</a>':esc(k); }).join(' e ')).join('; ')+(d.length>8?'; …':'')+'. Remova (×) ou oculte (⊘) onde não for a norma certa.'; }
   // horas e conclusão (histórias, cada uma uma vez só)
   const jd = k => JIRA_DATA[k]||null;
   function sumH(list){ const seen=new Set(); let e=0,r=0,n=0,d=0,s=0; list.forEach(x=>{ if(x.tipo!=='hi'||x.oculta||seen.has(x.key)) return; seen.add(x.key); n++; const j=jd(x.key); if(j){ s++; e+=+j.estimado_h||0; r+=+j.realizado_h||0; if(j.categoria==='done') d++; } }); return {e:Math.round(e*10)/10,r:Math.round(r*10)/10,n,d,s}; }
@@ -804,10 +818,10 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
       const L=issuesOf(c.id).filter(x=>bkOkF(x.frente)); if(!L.length) return;
       const ms=marcosDe(c), g={};
       L.forEach(x=>{ if(x.tipo==='hi' && x.pai && L.some(y=>y.key===x.pai)) return;
-        const ed=/^\d{4}-\d{2}-\d{2}$/.test(x.entrega||'')?x.entrega:''; (g[ed]=g[ed]||[]).push({key:x.key,tipo:x.tipo,frente:x.frente,kids:x.tipo==='ep'?L.filter(y=>y.pai===x.key&&y.tipo==='hi').map(y=>y.key).sort():[]}); });
+        const ed=/^\d{4}-\d{2}-\d{2}$/.test(x.entrega||'')?x.entrega:''; (g[ed]=g[ed]||[]).push({key:x.key,tipo:x.tipo,frente:x.frente,ver:x.ver||'',kids:x.tipo==='ep'?L.filter(y=>y.pai===x.key&&y.tipo==='hi').map(y=>y.key).sort():[]}); });
       const ent=Object.keys(g).sort((a,b)=>(a||'9')<(b||'9')?-1:1).map(d=>{ const m=ms.find(z=>z.iso===d);
         return {d, t:!d?'Sem data de entrega':(m?(m.old?'Versão anterior ('+m.ver+')':(m.key==='principal'?'Produção':'Fase posterior')):'Entrega'), items:g[d].sort((a,b)=>a.tipo===b.tipo?(a.key<b.key?-1:1):(a.tipo==='ep'?-1:1))}; });
-      out.push({id:c.id,cid:c.id,nome:c.chave+(c.versao&&/^\d/.test(c.versao)?' v'+c.versao:''),ent});
+      out.push({id:c.id,cid:c.id,nome:c.chave,ver:verTxt(c),ent});
     });
     return out.sort((a,b)=>{ const x=a.ent[0].d||'9', y=b.ent[0].d||'9'; return x<y?-1:x>y?1:0; });
   }
@@ -839,7 +853,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
   function bkTree(){
     const ref=bkRef(), q=BK.q.trim().toLowerCase();
     const hist=(k,fr,exig,lv)=>{ const j=bkJ(k); return {lv,id:k,k,fr,hist:true,j,exig,sit:bkSitH(j,exig,ref),d:bkDH(j),kids:[]}; };
-    const T=bkRaw().map(n=>({lv:0,id:'bk-'+n.id,n,kids:n.ent.map((e,i)=>({lv:1,id:'bk-'+n.id+'-'+i,e,n,kids:e.items.map(x=>x.tipo==='hi'?hist(x.key,x.frente,e.d,2):{lv:2,id:x.key,k:x.key,fr:x.frente,j:bkJ(x.key),exig:e.d,kids:x.kids.map(h=>hist(h,x.frente,e.d,3))})}))}));
+    const T=bkRaw().map(n=>({lv:0,id:'bk-'+n.id,n,kids:n.ent.map((e,i)=>({lv:1,id:'bk-'+n.id+'-'+i,e,n,kids:e.items.map(x=>x.tipo==='hi'?Object.assign(hist(x.key,x.frente,e.d,2),{ver:x.ver}):{lv:2,id:x.key,k:x.key,fr:x.frente,ver:x.ver,j:bkJ(x.key),exig:e.d,kids:x.kids.map(h=>hist(h,x.frente,e.d,3))})}))}));
     const roll=nd=>{
       if(nd.hist){ nd.leaf=true; const j=nd.j; nd.cnt=(!j||j.c==='cancel')?{d:0,i:0,n:0}:{d:+(j.c==='done'),i:+(j.c==='ind'),n:+(j.c==='new')}; nd.h={e:(!j||j.c==='cancel')?0:j.e,r:j?j.r:0}; return; }
       nd.leaf=nd.lv===2&&!nd.kids.length; nd.kids.forEach(roll);
@@ -914,9 +928,9 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     const line=nd=>{
       const has=nd.kids.length>0, op=isOpen(nd);
       let it='<div class="bk-it" style="padding-left:'+(nd.lv*16)+'px"><button type="button" class="bk-car'+(has?'':' nil')+'" data-bkt="'+esc(nd.id)+'" aria-expanded="'+op+'" aria-label="Abrir ou fechar">▶</button>';
-      if(nd.lv===0) it+='<span class="bk-ty n">NORMA</span>'+(nd.n.cid?'<a class="bk-tt" href="#nt-'+nd.n.cid+'" data-jump="'+nd.n.cid+'" title="'+esc(nd.n.nome)+' (ir para o card)">'+esc(nd.n.nome)+'</a>':'<span class="bk-tt" title="'+esc(nd.n.nome)+'">'+esc(nd.n.nome)+'</span>');
+      if(nd.lv===0) it+='<span class="bk-ty n">NORMA</span>'+(nd.n.ver?'<span class="vv" title="Versão vigente da norma">'+esc(nd.n.ver)+'</span>':'')+(nd.n.cid?'<a class="bk-tt" href="#nt-'+nd.n.cid+'" data-jump="'+nd.n.cid+'" title="'+esc(nd.n.nome)+' (ir para o card)">'+esc(nd.n.nome)+'</a>':'<span class="bk-tt" title="'+esc(nd.n.nome)+'">'+esc(nd.n.nome)+'</span>');
       else if(nd.lv===1) it+='<span class="bk-ty m">ENTREGA</span><span class="bk-tt">'+(nd.e.d?brS(nd.e.d)+' · ':'')+esc(nd.e.t)+'</span>';
-      else { const ep=!nd.hist; it+='<span class="bk-ty '+(ep?'e':'h')+'">'+(ep?'ÉPICO':'HIST')+'</span><a class="bk-k" href="'+JIRA+encodeURIComponent(nd.k)+'" target="_blank" rel="noopener" title="Abrir no Jira">'+esc(nd.k)+'</a>'+(nd.lv===2?'<span class="bk-fr '+(nd.fr==='Backoffice'?'b':'v')+'">'+(nd.fr==='Backoffice'?'BO':'VAR')+'</span>':'')+'<span class="bk-tt" title="'+esc(nd.j&&nd.j.t||'')+'">'+esc(nd.j&&nd.j.t||'')+'</span>'; }
+      else { const ep=!nd.hist; it+='<span class="bk-ty '+(ep?'e':'h')+'">'+(ep?'ÉPICO':'HIST')+'</span><a class="bk-k" href="'+JIRA+encodeURIComponent(nd.k)+'" target="_blank" rel="noopener" title="Abrir no Jira">'+esc(nd.k)+'</a>'+(nd.lv===2&&nd.ver?'<span class="vv" title="Versão da norma que esta issue atende">'+esc(nd.ver)+'</span>':'')+(nd.lv===2?'<span class="bk-fr '+(nd.fr==='Backoffice'?'b':'v')+'">'+(nd.fr==='Backoffice'?'BO':'VAR')+'</span>':'')+'<span class="bk-tt" title="'+esc(nd.j&&nd.j.t||'')+'">'+esc(nd.j&&nd.j.t||'')+'</span>'; }
       it+='</div>';
       const di=nd.d?'<div class="bk-dt bk-ci'+(nd.d.calc?' calc':'')+'" title="'+esc(nd.d.src)+'">'+brS(nd.d.a)+'</div><div class="bk-dt bk-cf'+(nd.d.calc?' calc':'')+'" title="'+esc(nd.d.src)+'">'+brS(nd.d.b)+'</div>':'<div class="bk-ci">—</div><div class="bk-cf">—</div>';
       body+='<div class="bk-row l'+nd.lv+(nd.hit?' hit':'')+'"><div class="bk-lc">'+it+di+jsC(nd)+sitC(nd.sit)+pgC(nd.cnt)+hC(nd.h)+'</div><div class="bk-tc" style="width:'+W+'px">'+bar(nd)+'</div></div>';
@@ -1151,7 +1165,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     if(F.esc && (!c.vigente || t.escopo!==F.esc)) return false;
     if(F.sta && (!c.vigente || sitLabel(c)!==F.sta)) return false;
     if(F.uf){ if(F.uf==='NAC'){ if(c.uf) return false; } else if(!(c.uf===F.uf || (F.nac && !c.uf))) return false; }
-    if(F.q){ const hay=(c.titulo+' '+c.chave+' '+c.norma+' '+c.id+' '+c.uf+' '+issuesOf(c.id).map(x=>x.key).join(' ')+' '+t.obs).toLowerCase(); if(!hay.includes(F.q.toLowerCase())) return false; }
+    if(F.q){ const hay=semAc((c.titulo+' '+c.chave+' '+c.norma+' '+c.id+' '+c.uf+' '+issuesOf(c.id).map(x=>x.key).join(' ')+' '+t.obs).toLowerCase()); if(!semAc(F.q.toLowerCase()).split(/\s+/).filter(Boolean).every(w=>hay.includes(w))) return false; }
     return true;
   }
 
@@ -1277,7 +1291,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     renderKpis();
     stack($('st-escopo'),$('lg-escopo'),ESCOPOS,'escopo',ESC_VAR);
     stack($('st-status'),$('lg-status'),SITN,'situacao',SITN_VAR);
-    renderDocs(); renderDates(); renderRoadmap(); renderMap(); renderBacklog(); renderList(); renderDirty();
+    renderDocs(); renderDates(); renderRoadmap(); renderMap(); renderBacklog(); renderList(); renderDirty(); renderDup();
   }
 
   function renderDirty(){
@@ -1297,7 +1311,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     opts($('f-esc'),ESCOPOS,'Todos'); opts($('f-sta'),SITN,'Todas');
     $('f-uf').innerHTML='<option value="">Todos</option><option value="NAC">Só nacionais</option>'+[...new Set(cs.map(c=>c.uf).filter(Boolean))].sort().map(u=>'<option value="'+u+'">'+u+' – '+(UFN[u]||u)+'</option>').join('');
   }
-  function syncFilters(){ $('f-q').value=F.q; $('f-mes').value=F.mes; $('f-doc').value=F.doc; $('f-tema').value=F.tema; $('f-esc').value=F.esc; $('f-sta').value=F.sta; $('f-uf').value=F.uf; $('f-nac').checked=F.nac; $('f-nac').disabled=!F.uf||F.uf==='NAC'; $('f-old').checked=F.old; }
+  function syncFilters(){ if($('f-q').value.trim()!==F.q) $('f-q').value=F.q; $('f-mes').value=F.mes; $('f-doc').value=F.doc; $('f-tema').value=F.tema; $('f-esc').value=F.esc; $('f-sta').value=F.sta; $('f-uf').value=F.uf; $('f-nac').checked=F.nac; $('f-nac').disabled=!F.uf||F.uf==='NAC'; $('f-old').checked=F.old; }
 
   function fmt(d){ const p=String(d).split('-'); return p.length===3? p[2]+'/'+p[1]+'/'+p[0] : d; }
 
@@ -1503,8 +1517,8 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
   const ENTOPEN = new Set();
   function issEdit(id, fn){ const k=NK(id); if(!(k in FB.stamp)) FB.stamp[k]=((base.itens[k]||{})._em)||''; const it=cur.itens[k]||(cur.itens[k]={}); if(!it.revisado) it.revisado=id; it.issues=it.issues||{}; fn(it.issues); if(!Object.keys(it.issues).length) delete it.issues; }
   function issRerender(id, ek, msg, focusSel){ const y=scrollY; renderAll(); scrollTo(0,y); const fb=document.getElementById('ifb-'+id+'-'+(ek||'none')); if(fb&&msg) fb.innerHTML=msg; if(focusSel){ const el=document.querySelector(focusSel); if(el) el.focus({preventScroll:true}); } }
-  function parseKeys(raw, id){ const have=effIssues(id).map(x=>x.key), ok=[], dup=[], bad=[]; splitKeys(raw).forEach(k=>{ if(!KEYRE.test(k)) bad.push(k); else if(have.includes(k)||ok.includes(k)) dup.push(k); else ok.push(k); });
-    const msg=(ok.length?'<span class="ok">'+ok.length+' adicionada(s): '+esc(ok.join(', '))+'. Status e horas chegam na próxima sincronização com o Jira.</span> ':'')+(dup.length?'<span class="w">Já estavam na norma: '+esc(dup.join(', '))+'.</span> ':'')+(bad.length?'<span class="w">Não parecem chaves do Jira (PROJETO-123): '+esc(bad.join(', '))+'.</span>':'');
+  function parseKeys(raw, id){ const have=effIssues(id).map(x=>x.key), me=NK(id), ok=[], dup=[], bad=[], fora=[]; splitKeys(raw).forEach(k=>{ if(!KEYRE.test(k)) bad.push(k); else if(have.includes(k)||ok.includes(k)) dup.push(k); else { const o=ownersOf(k).filter(n=>n!==me); if(o.length) fora.push(k+' (em '+nomeK(o[0])+')'); else ok.push(k); } });
+    const msg=(ok.length?'<span class="ok">'+ok.length+' adicionada(s): '+esc(ok.join(', '))+'. Status e horas chegam na próxima sincronização com o Jira.</span> ':'')+(dup.length?'<span class="w">Já estavam na norma: '+esc(dup.join(', '))+'.</span> ':'')+(bad.length?'<span class="w">Não parecem chaves do Jira (PROJETO-123): '+esc(bad.join(', '))+'.</span> ':'')+(fora.length?'<span class="w">Não incluídas, já estão em outra norma (cada issue só pode estar em uma): '+esc(fora.join(', '))+'.</span>':'');
     return {ok,msg}; }
   function issAdd(id, ek){
     const q=s=>document.querySelector(s+'[data-ie="'+ek+'"]');
