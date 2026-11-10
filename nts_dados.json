@@ -12792,7 +12792,8 @@
    "obs": [
     "Card no mês 09/2026 do portal; data do item 22/04/2026.",
     "Card traz Estado = Mato Grosso do Sul, mas a norma é de Cuiabá-MT; tratado como MT. Campo Norma indica revogação.",
-    "Card sem vigência de produção: o painel usa a Data de Obrigatoriedade da especificação (01/09/2026) como data de exigência."
+    "Card sem vigência de produção: o painel usa a Data de Obrigatoriedade da especificação (01/09/2026) como data de exigência.",
+    "Norma revogada por Portaria SMEconomia nº 1.081/2026 (Cuiabá) em 13/08/2026. Card 2026-09-28: \"Portaria SMEconomia nº 487, de 13.04.2026 ... - Revogado pela Portaria SMEconomia nº 1.081, de 13.08.2026\"."
    ],
    "nkey": "MT_Cuiaba_Portaria_SMEconomia_487_2026",
    "vigente": true,
@@ -12800,7 +12801,13 @@
    "versoes": [
     "2026-09-28"
    ],
-   "subst_nt": ""
+   "subst_nt": "",
+   "revogada": {
+    "por": "Portaria SMEconomia nº 1.081/2026 (Cuiabá)",
+    "por_nkey": "",
+    "data": "13/08/2026",
+    "fonte": "Card 2026-09-28: \"Portaria SMEconomia nº 487, de 13.04.2026 ... - Revogado pela Portaria SMEconomia nº 1.081, de 13.08.2026\"."
+   }
   },
   {
    "id": "2026-10-01",
