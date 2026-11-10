@@ -1,5 +1,5 @@
 {
- "gerado": "2026-11-09",
+ "gerado": "2026-11-10",
  "meses": [
   "setembro/2025",
   "outubro/2025",
@@ -13060,9 +13060,8 @@
    "obs": [],
    "nkey": "NF_e_NFC_e_NT_2026_008_valor_liquido_do_produto",
    "vigente": false,
-   "superada_por": "2026-11-01",
+   "superada_por": "2026-11-02",
    "versoes": [
-    "2026-11-01",
     "2026-11-02",
     "2026-10-05"
    ],
@@ -14390,58 +14389,6 @@
    "subst_nt": ""
   },
   {
-   "id": "2026-11-01",
-   "ano": 2026,
-   "mes": "novembro",
-   "titulo": "NF-e/NFC-e - Publicado a versão 1.01 da Nota Técnica 2026.008 - Valor Líquido do Produto",
-   "data_item": "03/11/2026",
-   "versao": "1.01",
-   "versao_txt": "1.01",
-   "documento": "NF-e/NFC-e",
-   "chave": "NF-e/NFC-e | NT 2026.008 (valor líquido do produto)",
-   "tema": "Reforma Tributária - DF-e",
-   "uf": "",
-   "esfera": "Federal",
-   "tributos": "NF-e/NFC-e",
-   "norma": "Nota Técnica 2026.008 - Valor Líquido do Produto",
-   "publicacao": "29/11/2026",
-   "especificacao": "29/11/2026",
-   "segmentos": [
-    "Todos"
-   ],
-   "impactos": [
-    "Cálculos",
-    "Procedimentos",
-    "Validação"
-   ],
-   "resumo": "NF-e/NFC-e - Publicado a versão 1.01 da Nota Técnica 2026.008 - Versão 1.00 - Valor Líquido do Produto Atenção: O IBS e a CBS são tributos calculados por fora, não integrando suas próprias bases de cálculo. A base de cálculo dos tributos deverá ser determinada de acordo com a legislação aplicável. Desta forma: a) No campo vProdLiq deve ser informado o valor líquido do produto ou serviço, sem qualquer tributo; b) No campo vProd deve ser informado o valor total do produto ou serviço, desconsiderados os valores de IBS, CBS e IS; c) No campo vItem deve ser informado o valor total do item, incluindo todos os tributos. d) No total do documento fiscal: No campo vNFTot deve ser informado o valor correspondente a soma do valor total dos itens (vItem).",
-   "vig_h": "26/10/2026",
-   "vig_p": "16/11/2026",
-   "vig_p_origem": "",
-   "subitens": [
-    {
-     "n": "1",
-     "t": "NF-e/NFC-e - Publicado a versão 1.01 da Nota Técnica 2026.008 - Valor Líquido do Produto",
-     "ref": "",
-     "nota": ""
-    }
-   ],
-   "vigencias": [],
-   "obs": [
-    "NT 2026.008 v1.01: vProdLiq sem tributos; vProd sem IBS, CBS e IS; vItem com todos os tributos."
-   ],
-   "nkey": "NF_e_NFC_e_NT_2026_008_valor_liquido_do_produto",
-   "vigente": true,
-   "superada_por": "",
-   "versoes": [
-    "2026-11-01",
-    "2026-11-02",
-    "2026-10-05"
-   ],
-   "subst_nt": "",
-   "empate": "Mesma versão em 2026-11-01, 2026-11-02. Vigente: card com data do item mais recente (regra proposta, a confirmar)."
-  },
-  {
    "id": "2026-11-02",
    "ano": 2026,
    "mes": "novembro",
@@ -14481,15 +14428,13 @@
    "vigencias": [],
    "obs": [],
    "nkey": "NF_e_NFC_e_NT_2026_008_valor_liquido_do_produto",
-   "vigente": false,
-   "superada_por": "2026-11-01",
+   "vigente": true,
+   "superada_por": "",
    "versoes": [
-    "2026-11-01",
     "2026-11-02",
     "2026-10-05"
    ],
-   "subst_nt": "",
-   "empate": "Mesma versão em 2026-11-01, 2026-11-02. Vigente: card com data do item mais recente (regra proposta, a confirmar)."
+   "subst_nt": ""
   }
  ]
 }
