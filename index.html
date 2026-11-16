@@ -192,6 +192,10 @@ details.help code{font-family:var(--f-mono);font-size:12.5px;background:var(--na
 .fr{font-size:11px;font-weight:700;border-radius:6px;padding:1px 6px;margin-left:6px}
 .fr-v{background:var(--varejo-t);color:var(--varejo)} .fr-b{background:var(--nvar-t);color:var(--nvar)}
 .org{font-size:11.5px;font-weight:600;color:var(--muted)} .org.j{color:#6B3FA0}
+.shc,.shp{display:inline-block;font-size:11px;font-weight:600;border-radius:9px;padding:0 7px;margin-left:4px;white-space:nowrap}
+.shc{background:#F3EDFA;color:#5B3A8C;border:1px solid #D9C8EE} .shc a{color:inherit}
+.shp{background:#EAF2FB;color:#1F5FA8;border:1px solid #B9D1EE}
+.shg,.shg b,.shg span{color:#9AA5B1 !important} td.shg small{display:block;font-size:10px;font-weight:400}
 .js{font-size:12px;font-weight:700;border-radius:999px;padding:1px 8px;white-space:nowrap}
 .jc-todo{background:var(--nav-t);color:var(--muted)} .jc-prog{background:var(--doing-t);color:var(--doing)} .jc-done{background:var(--ok-t);color:var(--ok)} .jc-wait{background:var(--warn-t);color:var(--warn)}
 .pct{display:inline-block;width:42px;height:6px;border-radius:3px;background:var(--nav-t);vertical-align:middle;margin-left:6px;overflow:hidden} .pct i{display:block;height:100%;background:var(--accent)}
@@ -629,16 +633,18 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
   const mkOf = (src,id) => { const m=((src.itens[id]||{}).marcos)||{}; const o={}; Object.keys(m).sort().forEach(k=>{ const x=m[k]||{}; if((x.status&&x.status!=='Não avaliado')||x.prevista) o[k]={status:x.status||'Não avaliado',prevista:x.prevista||''}; }); return JSON.stringify(o); };
   // issues da norma: { 'DVARPR-2075': {frente:'Varejo', entrega:'2026-11-16' | ''} }
   // issues da norma: { 'DVARPR-3250': {tipo:'ep'|'hi', frente:'Varejo'|'Backoffice', entrega:'AAAA-MM-DD'|'', pai:'<épico>'|'', origem:'manual'|'jira', oculta:true?} }
-  const isOf = (src,id) => { const m=((src.itens[id]||{}).issues)||{}; const o={}; Object.keys(m).sort().forEach(k=>{ const x=m[k]||{}; const r={tipo:x.tipo||'hi',frente:x.frente||'Varejo',entrega:x.entrega||'',pai:x.pai||'',origem:x.origem||'manual'}; if(x.oculta) r.oculta=true; if(x.versao) r.versao=x.versao; o[k]=r; }); return JSON.stringify(o); };
+  const isOf = (src,id) => { const m=((src.itens[id]||{}).issues)||{}; const o={}; Object.keys(m).sort().forEach(k=>{ const x=m[k]||{}; const r={tipo:x.tipo||'hi',frente:x.frente||'Varejo',entrega:x.entrega||'',pai:x.pai||'',origem:x.origem||'manual'}; if(x.oculta) r.oculta=true; if(x.versao) r.versao=x.versao; if(x.compart) r.compart=true; o[k]=r; }); return JSON.stringify(o); };
   // lista efetiva: cadastradas + filhas dos épicos trazidas pela sincronização com o Jira (sem duplicar)
   function effIssues(id){
     const st=((cur.itens[NK(id)]||{}).issues)||{};
-    const out=Object.keys(st).map(k=>({key:k,tipo:st[k].tipo||'hi',frente:st[k].frente||'Varejo',entrega:st[k].entrega||'',pai:st[k].pai||'',origem:st[k].origem||'manual',oculta:!!st[k].oculta}));
+    const out=Object.keys(st).map(k=>({key:k,tipo:st[k].tipo||'hi',frente:st[k].frente||'Varejo',entrega:st[k].entrega||'',pai:st[k].pai||'',origem:st[k].origem||'manual',oculta:!!st[k].oculta,cflag:!!st[k].compart}));
     const meK=NK(id);
-    out.filter(x=>x.tipo==='ep').forEach(ep=>{ const j=JIRA_DATA[ep.key]; ((j&&j.filhos)||[]).forEach(f=>{ const ex=out.find(x=>x.key===f); if(!ex && explicitOwners(f).some(k=>k!==meK)) return; if(!ex) out.push({key:f,tipo:'hi',frente:ep.frente,entrega:ep.entrega,pai:ep.key,origem:'jira',oculta:false,virtual:true}); else if(!ex.pai && ex.tipo==='hi') ex.pai=ep.key; }); });
+    out.filter(x=>x.tipo==='ep').forEach(ep=>{ const j=JIRA_DATA[ep.key]; ((j&&j.filhos)||[]).forEach(f=>{ const ex=out.find(x=>x.key===f); if(!ex && explicitOwners(f).some(k=>k!==meK)) return; if(!ex) out.push({key:f,tipo:'hi',frente:ep.frente,entrega:ep.entrega,pai:ep.key,origem:'jira',oculta:false,virtual:true,cflag:ep.cflag}); else if(!ex.pai && ex.tipo==='hi') ex.pai=ep.key; }); });
     out.forEach(x=>{ if(x.pai){ const p=out.find(y=>y.key===x.pai); if(p){ x.entrega=p.entrega; } else x.pai=''; } });
     const k=NK(id); out.forEach(x=>{ const sx=st[x.key]; x.ver = (sx&&sx.versao) || (x.pai ? '' : verIssue(k,{key:x.key,entrega:x.entrega},st)); });
     out.forEach(x=>{ if(!x.ver && x.pai){ const p=out.find(y=>y.key===x.pai); x.ver=p?p.ver:''; } });
+    out.forEach(x=>{ if(!x.cflag && x.pai){ const p=out.find(y=>y.key===x.pai); if(p&&p.cflag) x.cflag=true; } });
+    out.forEach(x=>{ const pr=principalOf(x.key); x.principal=pr; x.compart=!x.oculta && x.cflag && !!pr && pr!==meK; x.outras=(!x.oculta&&!x.compart)?ownIdx().get(x.key).filter(o=>o.comp&&o.k!==meK).map(o=>o.k):[]; });
     return out;
   }
   const issuesOf = id => effIssues(id).filter(x=>!x.oculta);
@@ -649,14 +655,24 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     Object.keys(cur.itens).forEach(k=>{ const is=(cur.itens[k]||{}).issues||{}; Object.keys(is).forEach(ek=>{ const x=is[ek]; if(x&&x.tipo==='ep'&&!x.oculta){ const j=JIRA_DATA[ek]; if(j&&(j.filhos||[]).includes(key)&&!((is[key]||{}).oculta)) o.add(k); } }); });
     return [...o]; }
   const nomeK = k => { const c=vigOfK(k); return c?c.chave:k; };
+  // ---------- issue compartilhada: a mesma issue atende várias normas; horas contam só na principal
+  // principal = primeira norma (vigente) em que a issue está visível sem a marca de compartilhada; sem nenhuma, a primeira compartilhada
+  let OWNC=null;
+  function ownIdx(){ if(OWNC) return OWNC; const M=new Map(), add=(key,k,comp)=>{ if(!M.has(key)) M.set(key,[]); const l=M.get(key); const e=l.find(o=>o.k===k); if(e){ if(!comp) e.comp=false; } else l.push({k,comp}); };
+    Object.keys(cur.itens).sort().forEach(k=>{ if(!vigOfK(k)) return; const is=(cur.itens[k]||{}).issues||{};
+      Object.keys(is).forEach(ek=>{ const x=is[ek]||{}; if(x.oculta) return; add(ek,k,!!x.compart || !!(x.pai&&is[x.pai]&&is[x.pai].compart));
+        if((x.tipo||'hi')==='ep'){ const j=JIRA_DATA[ek]; ((j&&j.filhos)||[]).forEach(f=>{ if(is[f]) return; if(explicitOwners(f).some(o=>o!==k)) return; add(f,k,!!x.compart); }); } }); });
+    OWNC={get:key=>M.get(key)||[]}; return OWNC; }
+  function principalOf(key){ const l=ownIdx().get(key); if(!l.length) return ''; const n=l.find(o=>!o.comp); return (n||l[0]).k; }
+  const PENDC={};
   function duplicadas(){ const vis=new Map();
-    Object.keys(cur.itens).forEach(k=>{ const c=vigOfK(k); if(!c) return; issuesOf(c.id).forEach(x=>{ if(!vis.has(x.key)) vis.set(x.key,new Set()); vis.get(x.key).add(k); }); });
+    Object.keys(cur.itens).forEach(k=>{ const c=vigOfK(k); if(!c) return; issuesOf(c.id).forEach(x=>{ if(x.compart) return; if(!vis.has(x.key)) vis.set(x.key,new Set()); vis.get(x.key).add(k); }); });
     return [...vis.entries()].filter(([,s])=>s.size>1).map(([key,s])=>({key,normas:[...s]})); }
   function renderDup(){ const el=$('dupw'); if(!el) return; const d=duplicadas(); el.hidden=!d.length; if(!d.length){ el.innerHTML=''; return; }
-    el.innerHTML='<b>Issue em mais de uma norma ('+d.length+'):</b> cada issue deve ficar em uma única norma. '+d.slice(0,8).map(x=>esc(x.key)+' → '+x.normas.map(k=>{ const c=vigOfK(k); return c?'<a href="#nt-'+c.id+'" data-jump="'+c.id+'">'+esc(c.chave)+'</a>':esc(k); }).join(' e ')).join('; ')+(d.length>8?'; …':'')+'. Remova (×) ou oculte (⊘) onde não for a norma certa.'; }
+    el.innerHTML='<b>Issue em mais de uma norma ('+d.length+'):</b> cada issue deve ficar em uma única norma. '+d.slice(0,8).map(x=>esc(x.key)+' → '+x.normas.map(k=>{ const c=vigOfK(k); return c?'<a href="#nt-'+c.id+'" data-jump="'+c.id+'">'+esc(c.chave)+'</a>':esc(k); }).join(' e ')).join('; ')+(d.length>8?'; …':'')+'. Remova (×) ou oculte (⊘) onde não for a norma certa. Se a mesma issue atende de fato as duas normas, remova de uma e inclua de novo escolhendo “Vincular como compartilhada”.'; }
   // horas e conclusão (histórias, cada uma uma vez só)
   const jd = k => JIRA_DATA[k]||null;
-  function sumH(list){ const seen=new Set(); let e=0,r=0,n=0,d=0,s=0; list.forEach(x=>{ if(x.tipo!=='hi'||x.oculta||seen.has(x.key)) return; seen.add(x.key); n++; const j=jd(x.key); if(j){ s++; e+=+j.estimado_h||0; r+=+j.realizado_h||0; if(j.categoria==='done') d++; } }); return {e:Math.round(e*10)/10,r:Math.round(r*10)/10,n,d,s}; }
+  function sumH(list){ const seen=new Set(); let e=0,r=0,n=0,d=0,s=0; list.forEach(x=>{ if(x.tipo!=='hi'||x.oculta||seen.has(x.key)) return; seen.add(x.key); n++; const j=jd(x.key); if(j){ s++; if(!x.compart){ e+=+j.estimado_h||0; r+=+j.realizado_h||0; } if(j.categoria==='done') d++; } }); return {e:Math.round(e*10)/10,r:Math.round(r*10)/10,n,d,s}; }
   const isChangedK = k => { const a=base.itens[k]||{}, b=cur.itens[k]||{}; return ITEM_F.some(f=>(a[f]||(f==='escopo'?'A classificar':''))!==(b[f]||(f==='escopo'?'A classificar':''))) || mkOf(base,k)!==mkOf(cur,k) || isOf(base,k)!==isOf(cur,k); };
   const isChanged = id => isChangedK(NK(id));
   const needsReview = c => { const it=cur.itens[NK(c.id)]; return !!(c.vigente && it && it.revisado && it.revisado!==c.id); };
@@ -827,7 +843,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
       const L=issuesOf(c.id).filter(x=>bkOkF(x.frente)); if(!L.length) return;
       const ms=marcosDe(c), g={};
       L.forEach(x=>{ if(x.tipo==='hi' && x.pai && L.some(y=>y.key===x.pai)) return;
-        const ed=/^\d{4}-\d{2}-\d{2}$/.test(x.entrega||'')?x.entrega:''; (g[ed]=g[ed]||[]).push({key:x.key,tipo:x.tipo,frente:x.frente,ver:x.ver||'',kids:x.tipo==='ep'?L.filter(y=>y.pai===x.key&&y.tipo==='hi').map(y=>y.key).sort():[]}); });
+        const ed=/^\d{4}-\d{2}-\d{2}$/.test(x.entrega||'')?x.entrega:''; (g[ed]=g[ed]||[]).push({key:x.key,tipo:x.tipo,frente:x.frente,ver:x.ver||'',comp:x.compart?nomeK(x.principal):'',kids:x.tipo==='ep'?L.filter(y=>y.pai===x.key&&y.tipo==='hi').map(y=>y.key).sort():[],kc:x.tipo==='ep'?Object.fromEntries(L.filter(y=>y.pai===x.key&&y.tipo==='hi'&&y.compart).map(y=>[y.key,nomeK(y.principal)])):{}}); });
       const ent=Object.keys(g).sort((a,b)=>(a||'9')<(b||'9')?-1:1).map(d=>{ const m=ms.find(z=>z.iso===d);
         return {d, t:!d?'Sem data de entrega':(m?(m.old?(m.ver?'Versão anterior ('+m.ver+')':'Data fora das versões'):(m.key==='principal'?'Produção':'Fase posterior')):'Entrega'), items:g[d].sort((a,b)=>a.tipo===b.tipo?(a.key<b.key?-1:1):(a.tipo==='ep'?-1:1))}; });
       out.push({id:c.id,cid:c.id,nome:c.chave,ver:verTxt(c),rev:!!c.revogada,ent});
@@ -862,9 +878,9 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
   function bkTree(){
     const ref=bkRef(), q=BK.q.trim().toLowerCase();
     const hist=(k,fr,exig,lv)=>{ const j=bkJ(k); return {lv,id:k,k,fr,hist:true,j,exig,sit:bkSitH(j,exig,ref),d:bkDH(j),kids:[]}; };
-    const T=bkRaw().map(n=>({lv:0,id:'bk-'+n.id,n,kids:n.ent.map((e,i)=>({lv:1,id:'bk-'+n.id+'-'+i,e,n,kids:e.items.map(x=>x.tipo==='hi'?Object.assign(hist(x.key,x.frente,e.d,2),{ver:x.ver}):{lv:2,id:x.key,k:x.key,fr:x.frente,ver:x.ver,j:bkJ(x.key),exig:e.d,kids:x.kids.map(h=>hist(h,x.frente,e.d,3))})}))}));
+    const T=bkRaw().map(n=>({lv:0,id:'bk-'+n.id,n,kids:n.ent.map((e,i)=>({lv:1,id:'bk-'+n.id+'-'+i,e,n,kids:e.items.map(x=>x.tipo==='hi'?Object.assign(hist(x.key,x.frente,e.d,2),{ver:x.ver,comp:x.comp||''}):{lv:2,id:x.key,k:x.key,fr:x.frente,ver:x.ver,comp:x.comp||'',j:bkJ(x.key),exig:e.d,kids:x.kids.map(h=>Object.assign(hist(h,x.frente,e.d,3),{comp:(x.kc||{})[h]||''}))})}))}));
     const roll=nd=>{
-      if(nd.hist){ nd.leaf=true; const j=nd.j; nd.cnt=(!j||j.c==='cancel')?{d:0,i:0,n:0}:{d:+(j.c==='done'),i:+(j.c==='ind'),n:+(j.c==='new')}; nd.h={e:(!j||j.c==='cancel')?0:j.e,r:j?j.r:0,rs:(!j||j.c==='cancel'||j.c==='done')?0:(j.rs!=null?j.rs:Math.max(0,j.e-j.r))}; return; }
+      if(nd.hist){ nd.leaf=true; const j=nd.j; nd.cnt=(!j||j.c==='cancel')?{d:0,i:0,n:0}:{d:+(j.c==='done'),i:+(j.c==='ind'),n:+(j.c==='new')}; nd.hT={e:(!j||j.c==='cancel')?0:j.e,r:j?j.r:0,rs:(!j||j.c==='cancel'||j.c==='done')?0:(j.rs!=null?j.rs:Math.max(0,j.e-j.r))}; nd.h=nd.comp?{e:0,r:0,rs:0}:nd.hT; return; }
       nd.leaf=nd.lv===2&&!nd.kids.length; nd.kids.forEach(roll);
       nd.cnt={d:0,i:0,n:0}; nd.h={e:0,r:0,rs:0}; nd.kids.forEach(c=>{ ['d','i','n'].forEach(t=>nd.cnt[t]+=c.cnt[t]); nd.h.e+=c.h.e; nd.h.r+=c.h.r; nd.h.rs+=c.h.rs; });
       const ds=nd.kids.map(c=>c.d).filter(Boolean), j=nd.j;
@@ -913,7 +929,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     BK.tree=V;
     // totais do que está na tela (respeitam o filtro de situação e a busca)
     let he=0,hr=0,hs=0; const vistos=new Set(); BK.vis=[];
-    const soma=nd=>{ if(nd.hist && !vistos.has(nd.k)){ vistos.add(nd.k); he+=nd.h.e; hr+=nd.h.r; hs+=nd.h.rs; BK.vis.push(nd); } nd.kids.forEach(soma); };
+    const soma=nd=>{ if(nd.hist && !vistos.has(nd.k)){ vistos.add(nd.k); he+=nd.hT.e; hr+=nd.hT.r; hs+=nd.hT.rs; BK.vis.push(nd); } nd.kids.forEach(soma); };
     V.forEach(soma);
     const risco=V.filter(n=>n.sit.s==='atr'||n.sit.s==='pa').length;
     const rd=x=>Math.round(x*10)/10, ab=BK_ABERTO.every(x=>BK.f.has(x))&&BK.f.size===BK_ABERTO.length, fl=BK.f.size?' · '+(ab?'em aberto':[...BK.f].map(x=>BKS[x][2].toLowerCase()).join(' + ')):'';
@@ -947,10 +963,10 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
       let it='<div class="bk-it" style="padding-left:'+(nd.lv*16)+'px"><button type="button" class="bk-car'+(has?'':' nil')+'" data-bkt="'+esc(nd.id)+'" aria-expanded="'+op+'" aria-label="Abrir ou fechar">▶</button>';
       if(nd.lv===0) it+='<span class="bk-ty n">NORMA</span>'+(nd.n.rev?'<span class="vv old">REVOGADA</span>':'')+(nd.n.ver?'<span class="vv" title="Versão vigente da norma">'+esc(nd.n.ver)+'</span>':'')+(nd.n.cid?'<a class="bk-tt" href="#nt-'+nd.n.cid+'" data-jump="'+nd.n.cid+'" title="'+esc(nd.n.nome)+' (ir para o card)">'+esc(nd.n.nome)+'</a>':'<span class="bk-tt" title="'+esc(nd.n.nome)+'">'+esc(nd.n.nome)+'</span>');
       else if(nd.lv===1) it+='<span class="bk-ty m">ENTREGA</span><span class="bk-tt">'+(nd.e.d?brS(nd.e.d)+' · ':'')+esc(nd.e.t)+'</span>';
-      else { const ep=!nd.hist; it+='<span class="bk-ty '+(ep?'e':'h')+'">'+(ep?'ÉPICO':'HIST')+'</span><a class="bk-k" href="'+JIRA+encodeURIComponent(nd.k)+'" target="_blank" rel="noopener" title="Abrir no Jira">'+esc(nd.k)+'</a>'+(nd.lv===2&&nd.ver?'<span class="vv" title="Versão da norma que esta issue atende">'+esc(nd.ver)+'</span>':'')+(nd.lv===2?'<span class="bk-fr '+(nd.fr==='Backoffice'?'b':'v')+'">'+(nd.fr==='Backoffice'?'BO':'VAR')+'</span>':'')+'<span class="bk-tt" title="'+esc(nd.j&&nd.j.t||'')+'">'+esc(nd.j&&nd.j.t||'')+'</span>'; }
+      else { const ep=!nd.hist; it+='<span class="bk-ty '+(ep?'e':'h')+'">'+(ep?'ÉPICO':'HIST')+'</span><a class="bk-k" href="'+JIRA+encodeURIComponent(nd.k)+'" target="_blank" rel="noopener" title="Abrir no Jira">'+esc(nd.k)+'</a>'+(nd.lv===2&&nd.ver?'<span class="vv" title="Versão da norma que esta issue atende">'+esc(nd.ver)+'</span>':'')+(nd.lv===2?'<span class="bk-fr '+(nd.fr==='Backoffice'?'b':'v')+'">'+(nd.fr==='Backoffice'?'BO':'VAR')+'</span>':'')+(nd.comp&&(nd.lv===2||nd.hist)?'<span class="shc" title="Issue compartilhada: horas contadas na norma principal ('+esc(nd.comp)+')">compart.</span>':'')+'<span class="bk-tt" title="'+esc(nd.j&&nd.j.t||'')+'">'+esc(nd.j&&nd.j.t||'')+'</span>'; }
       it+='</div>';
       const di=nd.d?'<div class="bk-dt bk-ci'+(nd.d.calc?' calc':'')+'" title="'+esc(nd.d.src)+'">'+brS(nd.d.a)+'</div><div class="bk-dt bk-cf'+(nd.d.calc?' calc':'')+'" title="'+esc(nd.d.src)+'">'+brS(nd.d.b)+'</div>':'<div class="bk-ci">—</div><div class="bk-cf">—</div>';
-      body+='<div class="bk-row l'+nd.lv+(nd.hit?' hit':'')+'"><div class="bk-lc">'+it+di+jsC(nd)+sitC(nd.sit)+pgC(nd.cnt)+hC(nd.h)+'</div><div class="bk-tc" style="width:'+W+'px">'+bar(nd)+'</div></div>';
+      body+='<div class="bk-row l'+nd.lv+(nd.hit?' hit':'')+'"><div class="bk-lc">'+it+di+jsC(nd)+sitC(nd.sit)+pgC(nd.cnt)+(nd.comp&&nd.hT?hC(nd.hT).replace('bk-hh bk-ch" title="Estimado / realizado','bk-hh bk-ch shg" title="Compartilhada: horas contadas na norma principal ('+esc(nd.comp)+')'):nd.comp&&!nd.hist?'<div class="bk-hh bk-ch shg" title="Compartilhada: horas contadas na norma principal">na principal</div>':hC(nd.h))+'</div><div class="bk-tc" style="width:'+W+'px">'+bar(nd)+'</div></div>';
       if(has&&op) nd.kids.forEach(line); };
     V.forEach(line);
     if(!V.length) body='<div class="bk-row"><div class="bk-lc"><div style="color:var(--muted)">Nenhum item para este filtro.</div></div><div class="bk-tc" style="width:'+W+'px"></div></div>';
@@ -960,11 +976,11 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
   }
   function bkCsv(){
     const q=v=>{ v=v==null?'':String(v); return /[;"\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
-    const rows=[['norma','versao_norma','entrega','epico','historia','resumo','frente','status_jira','situacao','sprint','inicio','fim','estimado_h','realizado_h','restante_h']];
+    const rows=[['norma','versao_norma','entrega','epico','historia','resumo','frente','status_jira','situacao','sprint','inicio','fim','estimado_h','realizado_h','restante_h','compartilhada_principal']];
     const pai={}; const marca=(nd,n,e,ep)=>{ if(nd.lv===0) n=nd; if(nd.lv===1) e=nd; if(nd.lv===2&&!nd.hist) ep=nd; if(nd.hist) pai[nd.k]={n,e,ep}; nd.kids.forEach(k=>marca(k,n,e,ep)); };
     (BK.tree||[]).forEach(nd=>marca(nd));
     (BK.vis||[]).forEach(h=>{ const p=pai[h.k]||{}, j=h.j||{}, n=p.n?p.n.n:{}, e=p.e?p.e.e:{};
-      rows.push([n.nome,n.ver,e.d?brS(e.d):'sem data',p.ep?p.ep.k:'',h.k,j.t||'',h.fr,j.st||'',BKS[h.sit.s][0],j.sp||'',h.d?brS(h.d.a):'',h.d?brS(h.d.b):'',String(h.h.e).replace('.',','),String(h.h.r).replace('.',','),String(h.h.rs).replace('.',',')]); });
+      rows.push([n.nome,n.ver,e.d?brS(e.d):'sem data',p.ep?p.ep.k:'',h.k,j.t||'',h.fr,j.st||'',BKS[h.sit.s][0],j.sp||'',h.d?brS(h.d.a):'',h.d?brS(h.d.b):'',String(h.hT.e).replace('.',','),String(h.hT.r).replace('.',','),String(h.hT.rs).replace('.',','),h.comp||'']); });
     const blob=new Blob(['\ufeff'+rows.map(r=>r.map(q).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'});
     const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='backlog_'+today+(BK.f.size?'_'+[...BK.f].join('-'):'')+'.csv'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },500);
   }
@@ -1232,18 +1248,21 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
       const esf = H.n ? (H.s ? '<span class="big">'+H.r+' h</span><span>realizadas de <b>'+H.e+' h</b> estimadas ('+hp+'%)</span><span>· '+H.d+' de '+H.n+' histórias concluídas</span>'
                             : '<span>'+H.n+' história(s) informada(s); horas e status chegam com a sincronização do Jira.</span>')
                       : '<span class="note" style="margin:0">Nenhuma história informada.</span>';
+      const nComp=new Set(all.filter(x=>x.compart&&!x.oculta&&x.tipo==='hi').map(x=>x.key)).size; const esfC=nComp?'<span class="shc" style="margin:4px 0 0">'+nComp+' história(s) compartilhada(s): horas contadas na norma principal</span>':'';
       const ebar = H.s && H.e ? '<div class="bar"><i style="flex:'+Math.min(H.r,H.e)+';background:var(--accent)"></i><i style="flex:'+Math.max(0,H.e-H.r)+'"></i></div>' : '';
       // linhas de issues
       const jst=k=>{ const j=jd(k); if(!j) return '<span class="js jc-wait">aguardando sync</span>'; return '<span class="js jc-'+({new:'todo',indeterminate:'prog',done:'done'})[j.categoria||'new']+'">'+esc(j.status||'—')+'</span>'; };
       const pct=(r,e)=>{ if(!e) return ''; const p=Math.round(r/e*100); return '<span class="pct" title="'+p+'%"><i style="width:'+Math.min(100,p)+'%;'+(p>100?'background:var(--pend)':'')+'"></i></span>'; };
       const entSel=x=>'<select data-imv="'+esc(x.key)+'" data-ik="'+c.id+'" aria-label="Entrega de '+esc(x.key)+'"><option value="">Sem entrega</option>'+ms.map(m=>'<option value="'+ekey(m)+'"'+(x.entrega===ekey(m)?' selected':'')+'>'+esc(fmt(m.iso)||'sem data')+'</option>').join('')+(x.entrega&&!ms.some(m=>ekey(m)===x.entrega)?'<option value="'+esc(x.entrega)+'" selected>'+esc(fmt(x.entrega))+' (fora desta versão)</option>':'')+'</select>';
-      const irow=(x,kid)=>{ const j=jd(x.key), kids=all.filter(y=>y.pai===x.key); const h=x.tipo==='ep'?sumH(kids):{e:j?+j.estimado_h||0:0,r:j?+j.realizado_h||0:0};
+      const irow=(x,kid)=>{ const j=jd(x.key), kids=all.filter(y=>y.pai===x.key); const h=x.tipo==='ep'?(x.compart?sumH(kids.map(y=>Object.assign({},y,{compart:false}))):sumH(kids)):{e:j?+j.estimado_h||0:0,r:j?+j.realizado_h||0:0};
+        const cchip=x.compart?'<span class="shc" title="Esta issue também atende a norma principal; as horas contam só lá">compartilhada · principal: <a href="#nt-'+(vigOfK(x.principal)||{}).id+'" data-jump="'+(vigOfK(x.principal)||{}).id+'">'+esc(nomeK(x.principal))+'</a></span>':(x.outras&&x.outras.length&&(!kid||!(all.find(y=>y.key===x.pai)||{}).outras)?'<span class="shp" title="Também vinculada como compartilhada em: '+esc(x.outras.map(nomeK).join('; '))+'">principal · também em '+x.outras.length+' norma'+(x.outras.length>1?'s':'')+'</span>':'');
+        const hcls=x.compart?' class="n shg" title="Horas contadas na norma principal"':' class="n"';
         const act=x.origem==='jira'?'<button type="button" class="x" data-ihide="'+esc(x.key)+'" data-ik="'+c.id+'" title="'+(x.oculta?'Voltar a contar nesta norma':'Ocultar desta norma (não altera o Jira)')+'" aria-label="'+(x.oculta?'Mostrar ':'Ocultar ')+esc(x.key)+'">'+(x.oculta?'↺':'⊘')+'</button>'
                                    :'<button type="button" class="x" data-idel="'+esc(x.key)+'" data-ik="'+c.id+'" title="Remover '+esc(x.key)+'" aria-label="Remover '+esc(x.key)+'">×</button>';
-        return '<tr class="'+(x.tipo==='ep'?'ep':'')+(kid?' kid':'')+(x.oculta?' hid':'')+'"><td><span class="typ '+(x.tipo==='ep'?'t-ep':'t-hi')+'">'+(x.tipo==='ep'?'Épico':'História')+'</span><a class="mono k" href="'+JIRA+encodeURIComponent(x.key)+'" target="_blank" rel="noopener">'+esc(x.key)+'</a>'+(x.ver&&(!kid||x.ver!==(all.find(y=>y.key===x.pai)||{}).ver)?'<span class="vv" title="Versão da norma que esta issue atende">'+esc(x.ver)+'</span>':'')+'<span class="fr '+(x.frente==='Backoffice'?'fr-b':'fr-v')+'">'+esc(x.frente)+'</span>'+(x.tipo==='ep'&&kids.length?' <span class="org">· '+kids.filter(y=>!y.oculta).length+' hist.</span>':'')+'</td>'
+        return '<tr class="'+(x.tipo==='ep'?'ep':'')+(kid?' kid':'')+(x.oculta?' hid':'')+'"><td><span class="typ '+(x.tipo==='ep'?'t-ep':'t-hi')+'">'+(x.tipo==='ep'?'Épico':'História')+'</span><a class="mono k" href="'+JIRA+encodeURIComponent(x.key)+'" target="_blank" rel="noopener">'+esc(x.key)+'</a>'+(x.ver&&(!kid||x.ver!==(all.find(y=>y.key===x.pai)||{}).ver)?'<span class="vv" title="Versão da norma que esta issue atende">'+esc(x.ver)+'</span>':'')+'<span class="fr '+(x.frente==='Backoffice'?'fr-b':'fr-v')+'">'+esc(x.frente)+'</span>'+(x.tipo==='ep'&&kids.length?' <span class="org">· '+kids.filter(y=>!y.oculta).length+' hist.</span>':'')+(kid&&x.compart&&(all.find(y=>y.key===x.pai)||{}).compart?'':cchip)+'</td>'
           +'<td><span class="org'+(x.origem==='jira'?' j':'')+'">'+(x.origem==='jira'?(x.oculta?'do Jira · oculta':'do Jira'):'manual')+'</span></td>'
           +'<td>'+jst(x.key)+'</td><td>'+(j&&j.sprint?esc(j.sprint):'—')+'</td>'
-          +'<td class="n">'+(h.e?h.e+' h':'—')+'</td><td class="n">'+(h.e||h.r?(h.r>h.e&&h.e?'<span class="over">'+h.r+' h</span>':h.r+' h'):'—')+pct(h.r,h.e)+'</td>'
+          +'<td'+hcls+'>'+(h.e?h.e+' h':'—')+(x.compart&&h.e?'<small>na principal</small>':'')+'</td><td'+hcls+'>'+(h.e||h.r?(h.r>h.e&&h.e?'<span class="over">'+h.r+' h</span>':h.r+' h'):'—')+(x.compart?(h.e||h.r?'<small>na principal</small>':''):pct(h.r,h.e))+'</td>'
           +'<td>'+(kid?'':entSel(x))+'</td><td class="act">'+act+'</td></tr>'; };
       const ibody=(ek)=>{ const eps=all.filter(x=>x.tipo==='ep'&&inG(x,ek)), solo=all.filter(x=>x.tipo==='hi'&&!x.pai&&inG(x,ek)); let rows='';
         eps.forEach(ep=>{ rows+=irow(ep,false); all.filter(y=>y.pai===ep.key).forEach(y=>rows+=irow(y,true));
@@ -1288,7 +1307,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
         +'<label>Escopo'+sel('escopo',ESCOPOS)+'</label>'
         +'<label class="obsf">Observação'+inp('obs','evidência, justificativa, pendência…')+'</label>'
         +'<div class="card2"><div class="t">Situação da norma (pelas entregas)</div><div class="l">'+(nsit?'<span class="sit s-'+nsit+'">'+SITK2N[nsit].toLowerCase()+'</span>':'<span class="sit s-n">sem entregas</span>')+'<span><b>'+nat+'</b> de <b>'+nval+'</b> entregas atendidas'+(nna?' ('+nna+' não se aplica)':'')+'</span></div><div class="bar">'+sbar+'</div></div>'
-        +'<div class="card2"><div class="t">Esforço da norma <span class="tagj">do Jira</span></div><div class="l">'+esf+'</div>'+ebar+'</div>'
+        +'<div class="card2"><div class="t">Esforço da norma <span class="tagj">do Jira</span></div><div class="l">'+esf+'</div>'+ebar+esfC+'</div>'
         +(c.revogada?(()=>{ const ab=vis.filter(x=>x.tipo==='hi'||!all.some(y=>y.pai===x.key)).filter(x=>{ const j=jd(x.key); return !j||j.categoria!=='done'; });
             return '<div class="revw wide"><b>Norma revogada</b> por '+esc(c.revogada.por)+' em '+esc(c.revogada.data)+'. Entregas não atendidas viraram "não se aplica"; as atendidas ficam como histórico.'
               +(ab.length?' <span class="sit s-l">'+ab.length+' issue(s) em aberto</span> '+esc(ab.map(x=>x.key).join(', '))+' — cancele no Jira ou leve para a norma que substituiu.':' Nenhuma issue em aberto.')+'</div>'; })():'')
@@ -1322,6 +1341,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
   }
 
   function renderAll(){
+    OWNC=null;
     renderKpis();
     stack($('st-escopo'),$('lg-escopo'),ESCOPOS,'escopo',ESC_VAR);
     stack($('st-status'),$('lg-status'),SITN,'situacao',SITN_VAR);
@@ -1549,15 +1569,16 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
   });
   // ---------- entregas e issues: abrir/fechar, adicionar (épico/história), mover, remover, ocultar
   const ENTOPEN = new Set();
-  function issEdit(id, fn){ const k=NK(id); if(!(k in FB.stamp)) FB.stamp[k]=((base.itens[k]||{})._em)||''; const it=cur.itens[k]||(cur.itens[k]={}); if(!it.revisado) it.revisado=id; it.issues=it.issues||{}; fn(it.issues); if(!Object.keys(it.issues).length) delete it.issues; }
+  function issEdit(id, fn){ OWNC=null; const k=NK(id); if(!(k in FB.stamp)) FB.stamp[k]=((base.itens[k]||{})._em)||''; const it=cur.itens[k]||(cur.itens[k]={}); if(!it.revisado) it.revisado=id; it.issues=it.issues||{}; fn(it.issues); if(!Object.keys(it.issues).length) delete it.issues; }
   function issRerender(id, ek, msg, focusSel){ const y=scrollY; renderAll(); scrollTo(0,y); const fb=document.getElementById('ifb-'+id+'-'+(ek||'none')); if(fb&&msg) fb.innerHTML=msg; if(focusSel){ const el=document.querySelector(focusSel); if(el) el.focus({preventScroll:true}); } }
-  function parseKeys(raw, id){ const have=effIssues(id).map(x=>x.key), me=NK(id), ok=[], dup=[], bad=[], fora=[]; splitKeys(raw).forEach(k=>{ if(!KEYRE.test(k)) bad.push(k); else if(have.includes(k)||ok.includes(k)) dup.push(k); else { const o=ownersOf(k).filter(n=>n!==me); if(o.length) fora.push(k+' (em '+nomeK(o[0])+')'); else ok.push(k); } });
-    const msg=(ok.length?'<span class="ok">'+ok.length+' adicionada(s): '+esc(ok.join(', '))+'. Status e horas chegam na próxima sincronização com o Jira.</span> ':'')+(dup.length?'<span class="w">Já estavam na norma: '+esc(dup.join(', '))+'.</span> ':'')+(bad.length?'<span class="w">Não parecem chaves do Jira (PROJETO-123): '+esc(bad.join(', '))+'.</span> ':'')+(fora.length?'<span class="w">Não incluídas, já estão em outra norma (cada issue só pode estar em uma): '+esc(fora.join(', '))+'.</span>':'');
+  function parseKeys(raw, id, ctx){ const have=effIssues(id).map(x=>x.key), me=NK(id), ok=[], dup=[], bad=[], fora=[], foraK=[]; splitKeys(raw).forEach(k=>{ if(!KEYRE.test(k)) bad.push(k); else if(have.includes(k)||ok.includes(k)) dup.push(k); else { const o=ownersOf(k).filter(n=>n!==me); if(o.length){ fora.push(k+' (em '+nomeK(principalOf(k)||o[0])+')'); foraK.push(k); } else ok.push(k); } });
+    const msg=(ok.length?'<span class="ok">'+ok.length+' adicionada(s): '+esc(ok.join(', '))+'. Status e horas chegam na próxima sincronização com o Jira.</span> ':'')+(dup.length?'<span class="w">Já estavam na norma: '+esc(dup.join(', '))+'.</span> ':'')+(bad.length?'<span class="w">Não parecem chaves do Jira (PROJETO-123): '+esc(bad.join(', '))+'.</span> ':'')+(fora.length?'<span class="w">Já estão em outra norma: '+esc(fora.join(', '))+'. Se também atendem esta norma, vincule como compartilhada (as horas continuam contando só na norma principal).</span> <button type="button" class="primary" data-icomp="'+id+'" data-ie="'+esc(ctx?ctx.ek:'')+'">Vincular como compartilhada</button>':'');
+    if(foraK.length && ctx) PENDC[id+'|'+ctx.ek]=Object.assign({keys:foraK},ctx); else delete PENDC[id+'|'+(ctx?ctx.ek:'')];
     return {ok,msg}; }
   function issAdd(id, ek){
     const q=s=>document.querySelector(s+'[data-ie="'+ek+'"]');
     const inp=q('[data-iadd="'+id+'"]'), tp=q('[data-ityp="'+id+'"]').value, fr=q('[data-ifr="'+id+'"]').value;
-    const {ok,msg}=parseKeys(inp.value,id); if(!inp.value.trim()) return;
+    const {ok,msg}=parseKeys(inp.value,id,{ek,tipo:tp,frente:fr,pai:'',versao:verTxt(byId[id])}); if(!inp.value.trim()) return;
     if(ok.length) issEdit(id, is=>ok.forEach(k=>is[k]={tipo:tp,frente:fr,entrega:ek,pai:'',origem:'manual',versao:verTxt(byId[id])}));
     ENTOPEN.add(id+'|'+ek); const keep=ok.length?'':inp.value;
     issRerender(id, ek, msg, '[data-iadd="'+id+'"][data-ie="'+ek+'"]');
@@ -1565,13 +1586,16 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
   }
   function issAddKids(id, ep){
     const inp=document.querySelector('[data-ihadd="'+ep+'"][data-ik="'+id+'"]'); if(!inp.value.trim()) return;
-    const e=effIssues(id).find(x=>x.key===ep); const {ok,msg}=parseKeys(inp.value,id);
+    const e=effIssues(id).find(x=>x.key===ep); const {ok,msg}=parseKeys(inp.value,id,{ek:e.entrega,tipo:'hi',frente:e.frente,pai:ep,versao:e.ver||verTxt(byId[id])});
     if(ok.length) issEdit(id, is=>ok.forEach(k=>is[k]={tipo:'hi',frente:e.frente,entrega:e.entrega,pai:ep,origem:'manual',versao:e.ver||verTxt(byId[id])}));
     ENTOPEN.add(id+'|'+e.entrega); issRerender(id, e.entrega, msg, '[data-ihadd="'+ep+'"][data-ik="'+id+'"]');
   }
   document.addEventListener('click',e=>{
     const tg=e.target.closest('[data-etog]'); if(tg){ const k=tg.dataset.etog; if(ENTOPEN.has(k)) ENTOPEN.delete(k); else ENTOPEN.add(k); const id=k.split('|')[0]; const y=scrollY; renderAll(); scrollTo(0,y); const b=document.querySelector('[data-etog="'+k+'"]'); if(b) b.focus({preventScroll:true}); return; }
     const a=e.target.closest('[data-iaddb]'); if(a){ issAdd(a.dataset.iaddb, a.dataset.ie); return; }
+    const cp=e.target.closest('[data-icomp]'); if(cp){ const id=cp.dataset.icomp, ek=cp.dataset.ie, P=PENDC[id+'|'+ek]; if(!P) return; delete PENDC[id+'|'+ek];
+      issEdit(id, is=>P.keys.forEach(k=>{ if(!is[k]) is[k]={tipo:P.tipo,frente:P.frente,entrega:ek,pai:P.pai,origem:'manual',versao:P.versao,compart:true}; }));
+      ENTOPEN.add(id+'|'+ek); issRerender(id, ek, '<span class="ok">'+P.keys.length+' vinculada(s) como compartilhada(s): '+esc(P.keys.join(', '))+'. Status e entrega valem aqui; as horas contam só na norma principal.</span>'); return; }
     const h=e.target.closest('[data-ihaddb]'); if(h){ issAddKids(h.dataset.ik, h.dataset.ihaddb); return; }
     const d=e.target.closest('[data-idel]'); if(d){ const id=d.dataset.ik, k=d.dataset.idel, x=effIssues(id).find(y=>y.key===k), ek=x?x.entrega:'';
       issEdit(id, is=>{ delete is[k]; Object.keys(is).forEach(q=>{ if(is[q].pai===k){ is[q].pai=''; is[q].entrega=ek; } }); }); issRerender(id, ek, '<span class="ok">'+esc(k)+' removida.</span>'); return; }
@@ -1611,11 +1635,11 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     const cols=['id','mes','ano','documento','chave','tema','uf','versao','vigente','superada_por','titulo','vig_h','vig_p','escopo','situacao','issues','horas_estimadas','horas_realizadas','obs'];
     download('nt_rastreio_'+today+'.csv',[cols.join(';')].concat(DATA.cards.map(c=>{ const t=c.vigente?(()=>{ const l=issuesOf(c.id), h=sumH(l); return Object.assign(get(c.id),{situacao:sitLabel(c),issues:l.map(x=>x.key).join(', '),horas_estimadas:h.s?h.e:'',horas_realizadas:h.s?h.r:''}); })():{}; const r=Object.assign({},c,{vigente:c.vigente?'S':'N'},t); return cols.map(k=>q(r[k])).join(';'); })));
     // uma linha por issue × norma (base do painel de esforço; colunas do Jira preenchidas na fase 2)
-    const ic=['norma','id_norma_vigente','documento','uf','escopo','entrega_data','entrega_descricao','status_entrega','issue','versao','tipo','epico_pai','frente','origem','oculta','status_jira','categoria_jira','sprint','horas_estimadas','horas_realizadas'];
+    const ic=['norma','id_norma_vigente','documento','uf','escopo','entrega_data','entrega_descricao','status_entrega','issue','versao','tipo','epico_pai','frente','origem','oculta','compartilhada','norma_principal','status_jira','categoria_jira','sprint','horas_estimadas','horas_realizadas'];
     const irows=[];
     DATA.cards.filter(c=>c.vigente).forEach(c=>{ const t=get(c.id), ms=marcosDe(c);
       effIssues(c.id).forEach(x=>{ const m=ms.find(m=>(m.key==='principal'?pkeyOf(c):m.key)===x.entrega), j=jd(x.key)||{};
-        irows.push([c.chave,c.id,c.documento,c.uf||'Nacional',t.escopo,x.entrega?fmt(x.entrega):'sem entrega',m?(m.key==='principal'?'Produção do card':m.desc.join(' | ')):'',m?mState(c,m).status:'',x.key,x.ver||'',x.tipo==='ep'?'Épico':'História',x.pai,x.frente,x.origem==='jira'?'do Jira':'manual',x.oculta?'S':'N',j.status||'',j.categoria||'',j.sprint||'',x.tipo==='hi'&&j.estimado_h!=null?j.estimado_h:'',x.tipo==='hi'&&j.realizado_h!=null?j.realizado_h:''].map(q).join(';')); }); });
+        irows.push([c.chave,c.id,c.documento,c.uf||'Nacional',t.escopo,x.entrega?fmt(x.entrega):'sem entrega',m?(m.key==='principal'?'Produção do card':m.desc.join(' | ')):'',m?mState(c,m).status:'',x.key,x.ver||'',x.tipo==='ep'?'Épico':'História',x.pai,x.frente,x.origem==='jira'?'do Jira':'manual',x.oculta?'S':'N',x.compart?'S':'N',x.principal?nomeK(x.principal):'',j.status||'',j.categoria||'',j.sprint||'',x.tipo==='hi'&&!x.compart&&j.estimado_h!=null?j.estimado_h:'',x.tipo==='hi'&&!x.compart&&j.realizado_h!=null?j.realizado_h:''].map(q).join(';')); }); });
     setTimeout(()=>download('nt_issues_'+today+'.csv',[ic.join(';')].concat(irows)),600);
     const ref=RM.ref||today, ec=['id_norma','chave','documento','escopo','marco','data_exigencia','descricao','status','entrega_prevista','situacao','em_risco','data_referencia'];
     const rows=[];
