@@ -216,6 +216,9 @@ details.help code{font-family:var(--f-mono);font-size:12.5px;background:var(--na
 .kpi b{display:block;font-family:var(--f-display);font-stretch:85%;font-size:32px;font-weight:800;line-height:1}
 .kpi span{color:var(--muted);font-size:13.5px}
 .kpi small{display:block;color:var(--muted);font-size:12.5px;margin-top:4px}
+.kpi .kl{display:block;font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.kpi .ke{margin-top:8px;padding-top:8px;border-top:1px solid var(--line)} .kpi .ke b{font-size:22px}
+.kpi b.hot{color:var(--pend)} .kpi b.okc{color:var(--ok)}
 .pd{display:grid;gap:14px}
 .pd-steps{display:grid;grid-template-columns:minmax(220px,1fr) minmax(0,3fr);gap:12px}
 .pd-box{border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:6px;align-content:start}
@@ -1275,15 +1278,24 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     const minhas=v.filter(c=>['Varejo','Conjunto'].includes(get(c.id).escopo));
     const at=minhas.filter(c=>normaSit(c,RM.ref||today)==='a').length;
     const rev=v.filter(needsReview).length;
-    const semIssue=minhas.filter(c=>!issuesOf(c.id).length).length;
-    $('kpis').innerHTML=[
-      [v.length,'normas vigentes',tot+' cards no portal (com versões)'],
-      [classif+'/'+v.length,'classificadas',cnt('escopo','A classificar')+' a classificar'],
-      [varejo,'na fatia do varejo','Varejo + Conjunto'+(classif?' · '+Math.round(varejo/classif*100)+'% das classificadas':'')],
-      [at+'/'+minhas.length,'do varejo atendidas',(minhas.length-at)+' em aberto'],
-      [semIssue,'do varejo sem issue','sem épico ou história informados'],
-      [rev,'versões novas a revisar','normas com versão nova desde a última revisão']
-    ].map(k=>'<div class="kpi"><b>'+k[0]+'</b><span>'+k[1]+'</span><small>'+k[2]+'</small></div>').join('');
+    const ref=RM.ref||today, PO={}; v.forEach(c=>{ PO[c.id]=pendOf(c,ref); });
+    const sum=(L,f)=>L.reduce((a,c)=>a+f(PO[c.id]),0), pl=(n,s1,s2)=>n===1?s1:s2;
+    const naN=cnt('escopo','Não se aplica'), aclN=cnt('escopo','A classificar');
+    const fun=v.filter(escMarcado), aclL=v.filter(c=>get(c.id).escopo==='A classificar');
+    const eTot=sum(v,p=>p.tot), eFun=sum(fun,p=>p.tot), eAcl=sum(aclL,p=>p.tot);
+    const mT=sum(minhas,p=>p.tot), mD=sum(minhas,p=>p.done), mOk=minhas.filter(c=>PO[c.id].tot&&PO[c.id].tot===PO[c.id].done).length;
+    const mSemN=minhas.filter(c=>PO[c.id].semiss>0).length, mSem=sum(minhas,p=>p.semiss), mAtr=sum(minhas,p=>p.atr);
+    const pc=(a,b)=>b?Math.round(a/b*100)+'%':'—';
+    const K=[
+      {n:v.length,u:'normas vigentes',s:tot+' cards no portal (com versões)', e:[eTot,'entregas nas normas vigentes','sem contar entregas “Não se aplica”']},
+      {n:classif+'/'+v.length,u:'classificadas',s:fun.length+' entram no funil · '+naN+' não se aplica · '+aclN+' a classificar', e:[eFun,'entregas no funil (as '+fun.length+' normas)',eAcl?'+'+eAcl+' nas '+aclN+' a classificar':'nenhuma a classificar']},
+      {n:varejo,u:'na fatia do varejo','s':'Varejo + Conjunto'+(classif?' · '+pc(varejo,classif)+' das classificadas':''), e:[mT,'entregas do varejo',pc(mT,eFun)+' das '+eFun+' do funil']},
+      {n:mOk+'/'+minhas.length,u:'do varejo com tudo atendido',s:(minhas.length-mOk)+' com entrega em aberto', e:[mD+'/'+mT,'entregas atendidas',(mT-mD)+' em aberto ('+pc(mT-mD,mT)+')'], ec:'okc'},
+      {n:mSemN,u:'do varejo com entrega em aberto sem issue',s:'mesmo grupo do funil', e:[mSem,'entregas em aberto sem épico ou história',mAtr+' já atrasada'+(mAtr===1?'':'s')], hot:true},
+      {n:rev,u:'versões novas a revisar',s:'normas com versão nova desde a última revisão'}
+    ];
+    $('kpis').innerHTML=K.map(k=>'<div class="kpi">'+(k.e?'<span class="kl">Normas</span>':'')+'<b'+(k.hot?' class="hot"':'')+'>'+k.n+'</b><span>'+k.u+'</span><small>'+k.s+'</small>'
+      +(k.e?'<div class="ke"><span class="kl">Entregas</span><b class="'+(k.hot?'hot':(k.ec||''))+'">'+k.e[0]+'</b><span>'+k.e[1]+'</span><small>'+k.e[2]+'</small></div>':'')+'</div>').join('');
   }
 
   const sitLabel = c => SITK2N[normaSit(c,RM.ref||today)] || 'Sem data';
