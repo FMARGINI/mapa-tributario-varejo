@@ -216,6 +216,29 @@ details.help code{font-family:var(--f-mono);font-size:12.5px;background:var(--na
 .kpi b{display:block;font-family:var(--f-display);font-stretch:85%;font-size:32px;font-weight:800;line-height:1}
 .kpi span{color:var(--muted);font-size:13.5px}
 .kpi small{display:block;color:var(--muted);font-size:12.5px;margin-top:4px}
+.pd{display:grid;gap:14px}
+.pd-steps{display:grid;grid-template-columns:minmax(220px,1fr) minmax(0,3fr);gap:12px}
+.pd-box{border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:6px;align-content:start}
+.pd-box h3{margin:0;font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.pd-big{font-family:var(--f-display);font-stretch:85%;font-size:30px;font-weight:800;line-height:1}
+.pd-fun{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.pd-st{border-radius:8px;padding:8px 10px;background:var(--nav-t);display:grid;gap:2px;font:inherit;color:inherit;text-align:left;border:1px solid transparent}
+.pd-st b{font-family:var(--f-display);font-stretch:85%;font-size:26px;font-weight:800;line-height:1.05}
+.pd-st span{font-size:12.5px;color:var(--muted)}
+.pd-st.hot{background:var(--pend-t);border-color:var(--pend)} .pd-st.hot b{color:var(--pend)}
+.pd-st.mid{background:var(--warn-t)} .pd-st.mid b{color:var(--warn)}
+button.pd-st{cursor:pointer} button.pd-st:hover{outline:2px solid var(--accent);outline-offset:-1px}
+.pd-bar{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--na-t)} .pd-bar i{display:block}
+.pd-lg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--muted)} .pd-lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.pd-tw{overflow:auto;max-height:420px;border:1px solid var(--line);border-radius:10px}
+.pd-tw table{width:100%;border-collapse:collapse;font-size:13px}
+.pd-tw th,.pd-tw td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.pd-tw th{position:sticky;top:0;background:var(--surface);color:var(--muted);font-weight:600;font-size:12px}
+.pd-tw td.n,.pd-tw th.n{text-align:right;white-space:nowrap}
+.pd-tl{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin:0 0 6px}
+.pd-tl h3{margin:0;font-size:14px}
+.pd-tl button{font:inherit;font-size:12.5px;border:1px solid var(--line);background:var(--surface);color:inherit;border-radius:7px;padding:4px 10px;cursor:pointer}
+@media (max-width:820px){.pd-steps{grid-template-columns:1fr}.pd-fun{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 /* barras */
 .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px}
@@ -468,6 +491,21 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
 
 <section class="kpis" id="kpis" aria-label="Indicadores"></section>
 
+<section class="panel pd" id="pd" aria-labelledby="pd-h">
+  <div class="rm-head">
+    <h2 id="pd-h">O que falta correr atrás</h2>
+    <div class="vtog" role="group" aria-label="Universo das pendências"><button type="button" data-uni="todas" aria-pressed="true">Global</button><button type="button" data-uni="varejo" aria-pressed="false" title="Escopo Varejo ou Conjunto">Varejo</button><button type="button" data-uni="backoffice" aria-pressed="false">Backoffice</button></div>
+  </div>
+  <div class="pd-steps" id="pd-steps"></div>
+  <div id="pd-tab"></div>
+  <details class="note" style="margin:0"><summary style="cursor:pointer;font-weight:600">Como os números são calculados</summary>
+  <p><b>A classificar:</b> normas vigentes (sem as revogadas) com o campo Escopo em “A classificar”. Elas ficam fora das demais contas até serem classificadas.</p>
+  <p><b>Entregas:</b> cada data de exigência das normas com escopo marcado (Varejo, Conjunto ou Backoffice, conforme o universo escolhido), incluindo entregas de versões anteriores que têm registro. Entregas “Não se aplica” ficam fora. <b>Concluída</b> = status da entrega “Atendido”.</p>
+  <p><b>Com issue:</b> há pelo menos um épico ou história (visível, inclusive compartilhada) ligado àquela entrega. <b>Issue sem entrega definida:</b> a entrega não tem issue ligada, mas a norma tem issue cadastrada sem entrega (ou em data que não é desta norma); basta escolher a entrega da issue. <b>Sem nenhuma issue:</b> nada aberto no Jira para ela ainda — é o que falta correr atrás.</p>
+  <p>O status do Jira não entra nesta conta: uma entrega com todas as histórias concluídas no Jira só conta como concluída depois de marcada “Atendido” (o card sugere isso).</p>
+  </details>
+</section>
+
 <section class="panel rm" aria-labelledby="rm-h">
   <div class="rm-head">
     <h2 id="rm-h">Roadmap de entregas</h2>
@@ -574,6 +612,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
   <label>Tema<select id="f-tema"></select></label>
   <label>Escopo<select id="f-esc"></select></label>
   <label>Situação<select id="f-sta"></select></label>
+  <label>Pendência<select id="f-pend"><option value="">Todas</option><option value="semiss">Entrega em aberto sem issue</option><option value="semref">Issue sem entrega definida</option><option value="nenhuma">Escopo marcado e nenhuma issue</option><option value="acl">A classificar</option></select></label>
   <label>Estado<select id="f-uf"></select></label>
   <label class="chk"><input type="checkbox" id="f-nac"> incluir nacionais</label>
   <label class="chk"><input type="checkbox" id="f-old"> Mostrar versões superadas</label>
@@ -623,7 +662,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
   const splitKeys = s => String(s||'').split(/[\s,;]+/).map(x=>x.trim().toUpperCase()).filter(Boolean);
 
   let DATA=null, base=null, cur=null, byId={};
-  const F = {q:'',mes:'',doc:'',tema:'',esc:'',sta:'',uf:'',nac:false,old:false,rev:false};
+  const F = {q:'',mes:'',doc:'',tema:'',esc:'',sta:'',pend:'',uf:'',nac:false,old:false,rev:false};
 
   // rastreio por norma (nkey); entregas por data de exigência. A entrega principal é a produção do card vigente.
   const ITEM_F = ['escopo','obs','revisado'];
@@ -1141,7 +1180,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     const b=e.target.closest('[data-uf]');
     if(b && (b.closest('#br')||b.closest('#map-ufd')||b.closest('#br-svg')||b.closest('#map-nac'))){ const inMap=b.closest('#br')||b.closest('#br-svg')||b.closest('#map-nac'); MAP.sel=(MAP.sel===b.dataset.uf)?'':b.dataset.uf; keepPos(renderMap); const nb=document.querySelector(b.dataset.uf==='NAC'?'#map-nac g.bb':(MAP.view==='mapa'?'#br-svg g':'#br button')+'[data-uf="'+b.dataset.uf+'"]'); if(nb && inMap) nb.focus({preventScroll:true}); return; }
     const v=e.target.closest('[data-view]'); if(v){ MAP.view=v.dataset.view; keepPos(renderMap); return; }
-    const un=e.target.closest('[data-uni]'); if(un){ RM.uni=un.dataset.uni; $('rm-uni').value=RM.uni; keepPos(()=>{ renderRoadmap(); renderMap(); renderBacklog(); renderList(); }); const nb=document.querySelector('[data-uni="'+RM.uni+'"]'); if(nb) nb.focus({preventScroll:true}); return; }
+    const un=e.target.closest('[data-uni]'); if(un){ RM.uni=un.dataset.uni; $('rm-uni').value=RM.uni; keepPos(()=>{ renderRoadmap(); renderMap(); renderBacklog(); renderPend(); renderList(); }); const nb=document.querySelector('[data-uni="'+RM.uni+'"]'); if(nb) nb.focus({preventScroll:true}); return; }
     const p=e.target.closest('[data-ufpick]');
     if(p){ F.uf=p.dataset.ufpick; F.nac=F.uf!=='NAC'; syncFilters(); renderDocs(); renderList(); $('list').scrollIntoView({behavior:'smooth'}); return; }
     if(e.target.closest('[data-ufclear]')){ MAP.sel=''; keepPos(renderMap); }
@@ -1151,6 +1190,62 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
 
   function opts(sel, values, all){ sel.innerHTML='<option value="">'+all+'</option>'+values.map(v=>'<option>'+esc(v)+'</option>').join(''); }
 
+  // ---------- pendências: entregas sem issue
+  const escMarcado = c => { const e=get(c.id).escopo; return e && e!=='A classificar' && e!=='Não se aplica'; };
+  function pendOf(c, ref){
+    ref=ref||RM.ref||today; const ms=marcosDe(c), L=issuesOf(c.id), ek=m=>m.key==='principal'?pkeyOf(c):m.key, EK=new Set(ms.map(ek));
+    const orf=L.some(x=>!x.entrega||!EK.has(x.entrega));
+    const o={tot:0,done:0,com:0,semref:0,semiss:0,atr:0,datas:[],issues:L.length};
+    ms.forEach(m=>{ const r=sitOf(c,m,ref); if(!r) return; o.tot++; if(r.sit==='a'){ o.done++; return; }
+      const k=ek(m); if(L.some(x=>x.entrega===k)) o.com++; else if(orf) o.semref++; else { o.semiss++; o.datas.push(m.iso||''); if(r.sit==='l') o.atr++; } });
+    return o; }
+  function pendMatch(c){
+    if(!F.pend) return true; if(!c.vigente || c.revogada) return false;
+    if(F.pend==='acl') return get(c.id).escopo==='A classificar';
+    if(!escMarcado(c) || !inUniverse(c)) return false;
+    if(F.pend==='nenhuma') return !issuesOf(c.id).length;
+    const p=pendOf(c); return F.pend==='semiss' ? p.semiss>0 : p.semref>0; }
+  function renderPend(){
+    if(!$('pd')) return;
+    document.querySelectorAll('#pd [data-uni]').forEach(b=>b.setAttribute('aria-pressed', b.dataset.uni===RM.uni));
+    const v=vig(), acl=v.filter(c=>get(c.id).escopo==='A classificar').length, na=v.filter(c=>get(c.id).escopo==='Não se aplica').length;
+    const N=v.filter(c=>escMarcado(c)&&inUniverse(c)), ref=RM.ref||today;
+    const T={tot:0,done:0,com:0,semref:0,semiss:0,atr:0}; const rows=[]; let nenhuma=0;
+    N.forEach(c=>{ const p=pendOf(c,ref); ['tot','done','com','semref','semiss','atr'].forEach(k=>T[k]+=p[k]); if(!p.issues) nenhuma++; if(p.semiss) rows.push({c,p}); });
+    const ab=T.tot-T.done, uniT={todas:'todas as normas classificadas',varejo:'fatia do varejo (Varejo + Conjunto)',backoffice:'backoffice'}[RM.uni];
+    const pc=(a,b)=>b?Math.round(a/b*100)+'%':'—';
+    const seg=(n,vr,t)=>n?'<i style="flex:'+n+';background:var('+vr+')" title="'+t+': '+n+'"></i>':'';
+    $('pd-steps').innerHTML=
+      '<div class="pd-box"><h3>1 · Classificar o escopo</h3><div class="pd-big">'+acl+'</div><span>de '+v.length+' normas vigentes ainda “A classificar”'+(na?' · '+na+' marcadas “Não se aplica”':'')+'</span>'
+      +'<div class="pd-bar">'+seg(v.length-acl-na,'--varejo','Classificadas')+seg(na,'--na','Não se aplica')+seg(acl,'--acl','A classificar')+'</div>'
+      +(acl?'<button type="button" class="pd-st mid" data-pdf="acl"><b>'+pc(acl,v.length)+'</b><span>falta classificar · ver na lista</span></button>':'<span class="note" style="margin:0">Todas classificadas.</span>')+'</div>'
+      +'<div class="pd-box"><h3>2 · Entregas das normas com escopo marcado — '+esc(uniT)+'</h3>'
+      +'<div class="pd-fun">'
+        +'<div class="pd-st"><b>'+T.tot+'</b><span>entregas no total ('+N.length+' normas)</span></div>'
+        +'<div class="pd-st"><b>'+ab+'</b><span>ainda não concluídas ('+pc(ab,T.tot)+') · '+T.done+' atendidas</span></div>'
+        +'<button type="button" class="pd-st'+(T.semref?' mid':'')+'" data-pdf="semref"><b>'+T.semref+'</b><span>em aberto com issue sem entrega definida · ver na lista</span></button>'
+        +'<button type="button" class="pd-st hot" data-pdf="semiss"><b>'+T.semiss+'</b><span>em aberto <b style="font-size:inherit;display:inline;color:inherit">sem nenhum épico ou história</b>'+(T.atr?' · '+T.atr+' já atrasadas':'')+' · ver na lista</span></button>'
+      +'</div>'
+      +'<div class="pd-bar">'+seg(T.done,'--ok','Atendidas')+seg(T.com,'--doing','Em aberto com issue')+seg(T.semref,'--warn','Issue sem entrega definida')+seg(T.semiss,'--pend','Sem nenhuma issue')+'</div>'
+      +'<div class="pd-lg"><span><i style="background:var(--ok)"></i>Atendidas '+T.done+'</span><span><i style="background:var(--doing)"></i>Em aberto com issue '+T.com+'</span><span><i style="background:var(--warn)"></i>Issue sem entrega definida '+T.semref+'</span><span><i style="background:var(--pend)"></i>Sem nenhuma issue '+T.semiss+'</span>'
+      +(nenhuma?'<span>· <a href="#" data-pdf="nenhuma" style="color:inherit"><b>'+nenhuma+'</b> norma(s) com escopo marcado sem nenhuma issue</a></span>':'')+'</div></div>';
+    const ord=x=>{ const d=x.p.datas.filter(Boolean).sort()[0]||'9999'; return (x.p.atr?'0':'1')+d; };
+    rows.sort((a,b)=>ord(a)<ord(b)?-1:ord(a)>ord(b)?1:a.c.chave.localeCompare(b.c.chave));
+    $('pd-tab').innerHTML=rows.length?'<div class="pd-tl"><h3>Normas com entrega em aberto sem issue ('+rows.length+')</h3><span><button type="button" data-pdf="semiss">Mostrar só estas na lista</button> <button type="button" id="pd-csv">Baixar CSV</button></span></div>'
+      +'<div class="pd-tw"><table><thead><tr><th>Norma</th><th>Escopo</th><th class="n">Sem issue</th><th class="n">Atrasadas</th><th>Próxima exigência sem issue</th><th class="n">Entregas da norma</th></tr></thead><tbody>'
+      +rows.map(x=>{ const d=x.p.datas.filter(Boolean).sort(); const prox=x.p.datas.filter(z=>z&&z>ref).sort()[0];
+        return '<tr><td><a href="#nt-'+x.c.id+'" data-jump="'+x.c.id+'">'+esc(x.c.chave)+'</a></td><td>'+esc(get(x.c.id).escopo)+'</td><td class="n"><b>'+x.p.semiss+'</b></td><td class="n">'+(x.p.atr?'<b style="color:var(--pend)">'+x.p.atr+'</b>':'—')+'</td><td>'+(x.p.atr?'<span style="color:var(--pend)">desde '+fmt(d[0])+'</span>'+(prox?' · próxima '+fmt(prox):''):(d.length?fmt(d[0]):'sem data'))+'</td><td class="n">'+x.p.done+' atendidas de '+x.p.tot+'</td></tr>'; }).join('')
+      +'</tbody></table></div>':'<p class="note" style="margin:0">Nenhuma entrega em aberto sem issue neste universo.</p>';
+    PD.rows=rows;
+  }
+  const PD={rows:[]};
+  document.addEventListener('click',e=>{
+    const f=e.target.closest('[data-pdf]'); if(f){ e.preventDefault(); F.pend=f.dataset.pdf; syncFilters(); renderList(); $('list').scrollIntoView({behavior:'smooth'}); return; }
+    if(e.target.closest('#pd-csv')){ const q=v=>{ v=v==null?'':String(v); return /[;"\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
+      const L=[['norma','id_norma_vigente','escopo','entregas_total','entregas_atendidas','em_aberto_com_issue','issue_sem_entrega','sem_issue','sem_issue_atrasadas','datas_sem_issue'].join(';')]
+        .concat(PD.rows.map(x=>[x.c.chave,x.c.id,get(x.c.id).escopo,x.p.tot,x.p.done,x.p.com,x.p.semref,x.p.semiss,x.p.atr,x.p.datas.map(z=>z?fmt(z):'sem data').join(', ')].map(q).join(';')));
+      download('pendencias_sem_issue_'+RM.uni+'_'+today+'.csv',L); }
+  });
   function renderKpis(){
     const v=vig(), tot=DATA.cards.length;
     const cnt=(f,val)=>v.filter(c=>get(c.id)[f]===val).length;
@@ -1210,6 +1305,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     if(F.tema && c.tema!==F.tema) return false;
     if(F.esc && (!c.vigente || t.escopo!==F.esc)) return false;
     if(F.sta && (!c.vigente || sitLabel(c)!==F.sta)) return false;
+    if(!pendMatch(c)) return false;
     if(F.uf){ if(F.uf==='NAC'){ if(c.uf) return false; } else if(!(c.uf===F.uf || (F.nac && !c.uf))) return false; }
     if(F.q){ const hay=semAc((c.titulo+' '+c.chave+' '+c.norma+' '+c.id+' '+c.uf+' '+issuesOf(c.id).map(x=>x.key).join(' ')+' '+t.obs).toLowerCase()); if(!semAc(F.q.toLowerCase()).split(/\s+/).filter(Boolean).every(w=>hay.includes(w))) return false; }
     return true;
@@ -1342,7 +1438,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
 
   function renderAll(){
     OWNC=null;
-    renderKpis();
+    renderKpis(); renderPend();
     stack($('st-escopo'),$('lg-escopo'),ESCOPOS,'escopo',ESC_VAR);
     stack($('st-status'),$('lg-status'),SITN,'situacao',SITN_VAR);
     renderDocs(); renderDates(); renderRoadmap(); renderMap(); renderBacklog(); renderList(); renderDirty(); renderDup();
@@ -1365,7 +1461,7 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     opts($('f-esc'),ESCOPOS,'Todos'); opts($('f-sta'),SITN,'Todas');
     $('f-uf').innerHTML='<option value="">Todos</option><option value="NAC">Só nacionais</option>'+[...new Set(cs.map(c=>c.uf).filter(Boolean))].sort().map(u=>'<option value="'+u+'">'+u+' – '+(UFN[u]||u)+'</option>').join('');
   }
-  function syncFilters(){ if($('f-q').value.trim()!==F.q) $('f-q').value=F.q; $('f-mes').value=F.mes; $('f-doc').value=F.doc; $('f-tema').value=F.tema; $('f-esc').value=F.esc; $('f-sta').value=F.sta; $('f-uf').value=F.uf; $('f-nac').checked=F.nac; $('f-nac').disabled=!F.uf||F.uf==='NAC'; $('f-old').checked=F.old; $('f-rev').checked=F.rev; }
+  function syncFilters(){ if($('f-q').value.trim()!==F.q) $('f-q').value=F.q; $('f-mes').value=F.mes; $('f-doc').value=F.doc; $('f-tema').value=F.tema; $('f-esc').value=F.esc; $('f-sta').value=F.sta; $('f-pend').value=F.pend; $('f-uf').value=F.uf; $('f-nac').checked=F.nac; $('f-nac').disabled=!F.uf||F.uf==='NAC'; $('f-old').checked=F.old; $('f-rev').checked=F.rev; }
 
   function fmt(d){ const p=String(d).split('-'); return p.length===3? p[2]+'/'+p[1]+'/'+p[0] : d; }
 
@@ -1396,8 +1492,8 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     $('rm-ref').value=RM.ref||today; $('rm-uni').value=RM.uni;
     fillFilters(); syncFilters(); renderAll();
   }
-  $('rm-uni').addEventListener('change',e=>{ e.stopPropagation(); RM.uni=e.target.value; renderRoadmap(); renderMap(); renderBacklog(); renderList(); });
-  $('rm-ref').addEventListener('change',e=>{ e.stopPropagation(); RM.ref=e.target.value||today; renderRoadmap(); renderMap(); renderBacklog(); renderList(); });
+  $('rm-uni').addEventListener('change',e=>{ e.stopPropagation(); RM.uni=e.target.value; renderRoadmap(); renderMap(); renderBacklog(); renderPend(); renderList(); });
+  $('rm-ref').addEventListener('change',e=>{ e.stopPropagation(); RM.ref=e.target.value||today; renderRoadmap(); renderMap(); renderBacklog(); renderPend(); renderList(); });
 
   const load = f => fetch(f+'?v='+Date.now(),{cache:'no-store'}).then(r=>{ if(!r.ok) throw 0; return r.json(); });
   const FILE_JIRA='NT_jira.json';
@@ -1555,17 +1651,17 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
   });
 
   // filtros
-  const onF=()=>{ F.q=$('f-q').value.trim(); F.mes=$('f-mes').value; F.doc=$('f-doc').value; F.tema=$('f-tema').value; F.esc=$('f-esc').value; F.sta=$('f-sta').value; F.uf=$('f-uf').value; F.nac=$('f-nac').checked; F.old=$('f-old').checked; F.rev=$('f-rev').checked; syncFilters(); MAP.sel=(F.uf&&F.uf!=='NAC')?F.uf:''; renderMap(); renderDocs(); renderList(); };
-  ['f-mes','f-doc','f-tema','f-esc','f-sta','f-uf','f-nac','f-old','f-rev'].forEach(i=>$(i).addEventListener('change',e=>{ e.stopPropagation(); onF(); }));
+  const onF=()=>{ F.q=$('f-q').value.trim(); F.mes=$('f-mes').value; F.doc=$('f-doc').value; F.tema=$('f-tema').value; F.esc=$('f-esc').value; F.sta=$('f-sta').value; F.pend=$('f-pend').value; F.uf=$('f-uf').value; F.nac=$('f-nac').checked; F.old=$('f-old').checked; F.rev=$('f-rev').checked; syncFilters(); MAP.sel=(F.uf&&F.uf!=='NAC')?F.uf:''; renderMap(); renderDocs(); renderList(); };
+  ['f-mes','f-doc','f-tema','f-esc','f-sta','f-pend','f-uf','f-nac','f-old','f-rev'].forEach(i=>$(i).addEventListener('change',e=>{ e.stopPropagation(); onF(); }));
   $('f-q').addEventListener('input',onF);
-  $('f-clear').addEventListener('click',()=>{ Object.assign(F,{q:'',mes:'',doc:'',tema:'',esc:'',sta:'',uf:'',nac:false,old:false,rev:false}); MAP.sel=''; syncFilters(); renderMap(); renderDocs(); renderList(); });
+  $('f-clear').addEventListener('click',()=>{ Object.assign(F,{q:'',mes:'',doc:'',tema:'',esc:'',sta:'',pend:'',uf:'',nac:false,old:false,rev:false}); MAP.sel=''; syncFilters(); renderMap(); renderDocs(); renderList(); });
   document.addEventListener('click',e=>{
     const a=e.target.closest('[data-f][data-v]');
     if(a && a.tagName==='A'){ e.preventDefault(); const k=a.dataset.f; F[k]=(F[k]===a.dataset.v)?'':a.dataset.v; syncFilters(); renderDocs(); renderList(); $('list').scrollIntoView({behavior:'smooth'}); return; }
     const tr=e.target.closest('tr.pick');
     if(tr){ F.doc=(F.doc===tr.dataset.doc)?'':tr.dataset.doc; syncFilters(); renderDocs(); renderList(); return; }
     const j=e.target.closest('[data-jump]');
-    if(j){ e.preventDefault(); const id=j.dataset.jump; if(!byId[id].vigente && !F.old){ F.old=true; } F.q='';F.mes='';F.doc='';F.tema='';F.esc='';F.sta='';F.uf='';F.nac=false; syncFilters(); renderDocs(); renderList(); const el=$('nt-'+id); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.classList.add('flash'); setTimeout(()=>el.classList.remove('flash'),1400); } }
+    if(j){ e.preventDefault(); const id=j.dataset.jump; if(!byId[id].vigente && !F.old){ F.old=true; } F.q='';F.mes='';F.doc='';F.tema='';F.esc='';F.sta='';F.pend='';F.uf='';F.nac=false; syncFilters(); renderDocs(); renderList(); const el=$('nt-'+id); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.classList.add('flash'); setTimeout(()=>el.classList.remove('flash'),1400); } }
   });
   // ---------- entregas e issues: abrir/fechar, adicionar (épico/história), mover, remover, ocultar
   const ENTOPEN = new Set();
