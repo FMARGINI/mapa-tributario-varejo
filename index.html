@@ -229,6 +229,7 @@ details.help code{font-family:var(--f-mono);font-size:12.5px;background:var(--na
 .pd-st.mid{background:var(--warn-t)} .pd-st.mid b{color:var(--warn)}
 button.pd-st{cursor:pointer} button.pd-st:hover{outline:2px solid var(--accent);outline-offset:-1px}
 .pd-st.pot{background:var(--surface);border:1.5px dashed var(--acl)} .pd-st.pot b{color:var(--acl)} .pd-st.pot b.in{display:inline;font-size:inherit;font-family:inherit;color:inherit;font-weight:700}
+.pd-st .pd-sub{font-size:12.5px;color:var(--ink)} .pd-sub em{font-style:normal;font-weight:700;color:var(--ok)}
 .pd-cas{display:grid;gap:6px;margin-top:2px}
 .pd-cr{display:grid;grid-template-columns:170px 1fr;gap:10px;align-items:center;font-size:12.5px}
 .pd-cl{color:var(--muted);text-align:right}
@@ -1223,8 +1224,8 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     document.querySelectorAll('#pd [data-uni]').forEach(b=>b.setAttribute('aria-pressed', b.dataset.uni===RM.uni));
     const v=vig(), acl=v.filter(c=>get(c.id).escopo==='A classificar').length, na=v.filter(c=>get(c.id).escopo==='Não se aplica').length;
     const N=v.filter(c=>escMarcado(c)&&inUniverse(c)), ref=RM.ref||today;
-    const T={tot:0,done:0,com:0,semref:0,semiss:0,atr:0}; const rows=[]; let nenhuma=0, nenhumaOk=0, nAb=0, nRef=0;
-    N.forEach(c=>{ const p=pendOf(c,ref); ['tot','done','com','semref','semiss','atr'].forEach(k=>T[k]+=p[k]); if(!p.issues){ nenhuma++; if(!p.semiss) nenhumaOk++; } if(p.tot>p.done) nAb++; if(p.semref) nRef++; if(p.semiss) rows.push({c,p}); });
+    const T={tot:0,done:0,com:0,semref:0,semiss:0,atr:0}; const rows=[]; let nenhuma=0, nenhumaOk=0, nAb=0, nRef=0, nOk=0;
+    N.forEach(c=>{ const p=pendOf(c,ref); ['tot','done','com','semref','semiss','atr'].forEach(k=>T[k]+=p[k]); if(!p.issues){ nenhuma++; if(!p.semiss) nenhumaOk++; } if(p.tot>p.done) nAb++; else if(p.tot) nOk++; if(p.semref) nRef++; if(p.semiss) rows.push({c,p}); });
     const P={tot:0,ab:0,semiss:0,atr:0,n:0}; v.filter(c=>get(c.id).escopo==='A classificar').forEach(c=>{ const p=pendOf(c,ref); P.n++; P.tot+=p.tot; P.ab+=p.tot-p.done; P.semiss+=p.semiss; P.atr+=p.atr; });
     const ab=T.tot-T.done, uniT={todas:'todas as normas classificadas',varejo:'fatia do varejo (Varejo + Conjunto)',backoffice:'backoffice'}[RM.uni];
     const pc=(a,b)=>b?Math.round(a/b*100)+'%':'—';
@@ -1235,8 +1236,8 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
       +(acl?'<button type="button" class="pd-st pot" data-pdf="acl"><b>'+P.tot+' entrega'+(P.tot===1?'':'s')+'</b><span>'+pc(acl,v.length)+' falta classificar · nessas '+acl+' normas, '+P.ab+' entregas em aberto'+(P.atr?', <b class="in">'+P.atr+' já atrasadas sem issue</b>':'')+' · podem entrar no seu backlog · ver na lista (exigência mais antiga primeiro)</span></button>':'<span class="note" style="margin:0">Todas classificadas.</span>')+'</div>'
       +'<div class="pd-box"><h3>2 · Entregas das normas com escopo marcado — '+esc(uniT)+'</h3>'
       +'<div class="pd-fun">'
-        +'<div class="pd-st"><b>'+T.tot+'</b><span>entregas no total, em '+N.length+' normas</span></div>'
-        +'<div class="pd-st"><b>'+ab+'</b><span>entregas ainda não concluídas ('+pc(ab,T.tot)+'), em '+nAb+' normas · '+T.done+' entregas atendidas</span></div>'
+        +'<div class="pd-st"><b>'+T.tot+'</b><span>entregas no total, em '+N.length+' normas</span>'+(T.tot?'<span class="pd-sub"><em>'+T.done+' já atendida'+(T.done===1?'':'s')+'</em> ('+pc(T.done,T.tot)+') · '+nOk+' norma'+(nOk===1?'':'s')+' com tudo atendido</span>':'')+'</div>'
+        +'<div class="pd-st"><b>'+ab+'</b><span>entregas ainda não concluídas ('+pc(ab,T.tot)+'), em '+nAb+' normas</span></div>'
         +'<button type="button" class="pd-st'+(T.semref?' mid':'')+'" data-pdf="semref"><b>'+T.semref+'</b><span>entregas em aberto com issue sem entrega definida, em '+nRef+' normas · ver na lista</span></button>'
         +'<button type="button" class="pd-st hot" data-pdf="semiss"><b>'+T.semiss+'</b><span>entregas em aberto <b style="font-size:inherit;display:inline;color:inherit">sem nenhum épico ou história</b>, em '+rows.length+' normas'+(T.atr?' · '+T.atr+' entregas já atrasadas':'')+' · ver na lista</span></button>'
       +'</div>'
