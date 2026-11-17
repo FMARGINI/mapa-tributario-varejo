@@ -216,9 +216,19 @@ details.help code{font-family:var(--f-mono);font-size:12.5px;background:var(--na
 .kpi b{display:block;font-family:var(--f-display);font-stretch:85%;font-size:32px;font-weight:800;line-height:1}
 .kpi span{color:var(--muted);font-size:13.5px}
 .kpi small{display:block;color:var(--muted);font-size:12.5px;margin-top:4px}
-.kpi .kl{display:block;font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-.kpi .ke{margin-top:8px;padding-top:8px;border-top:1px solid var(--line)} .kpi .ke b{font-size:22px}
-.kpi b.hot{color:var(--pend)} .kpi b.okc{color:var(--ok)}
+.kpis{grid-template-columns:1fr 1fr 1.5fr 1fr}
+.kpi .kq{display:block;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.kpi .kp{display:flex;gap:22px;flex-wrap:wrap;align-items:baseline} .kpi .kp div{display:grid}
+.kpi .kp b{font-size:34px} .kpi .kp span{font-size:13px;color:var(--muted)}
+.kpi.kv .kp b{color:var(--varejo)}
+.kpi.ka{border:1.5px dashed var(--acl)} .kpi.ka .kq,.kpi.ka .kp b{color:var(--acl)} .kpi.ka a{color:inherit}
+.kb-r{display:grid;grid-template-columns:64px 1fr;gap:10px;align-items:center;font-size:13px;margin:4px 0} .kb-r>span{color:var(--muted)}
+.kb{display:flex;height:22px;border-radius:5px;overflow:hidden;background:var(--nav-t)}
+.kb i{display:flex;align-items:center;padding:0 8px;color:var(--surface);font-weight:700;font-style:normal;font-size:12.5px;white-space:nowrap;min-width:26px}
+.kb i.d{background:var(--ok)} .kb i.f{background:var(--pend)}
+.kl2{display:flex;gap:14px;font-size:12.5px;color:var(--muted);margin-top:4px} .kl2 i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.krev{grid-column:1/-1;font-size:13px;color:var(--muted);padding:2px 4px} .krev a{color:inherit;font-weight:600}
+@media (max-width:1000px){.kpis{grid-template-columns:1fr 1fr}}
 .pd{display:grid;gap:14px}
 .pd-steps{display:grid;grid-template-columns:minmax(220px,1fr) minmax(0,3fr);gap:12px}
 .pd-box{border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:6px;align-content:start}
@@ -1351,16 +1361,15 @@ a.bk-tt{color:inherit;text-decoration:none}a.bk-tt:hover{text-decoration:underli
     const mT=sum(minhas,p=>p.tot), mD=sum(minhas,p=>p.done), mOk=minhas.filter(c=>PO[c.id].tot&&PO[c.id].tot===PO[c.id].done).length;
     const mSemN=minhas.filter(c=>PO[c.id].semiss>0).length, mSem=sum(minhas,p=>p.semiss), mAtr=sum(minhas,p=>p.atr);
     const pc=(a,b)=>b?Math.round(a/b*100)+'%':'—';
-    const K=[
-      {n:v.length,u:'normas vigentes',s:tot+' cards no portal (com versões)', e:[eTot,'entregas nas normas vigentes','sem contar entregas “Não se aplica”']},
-      {n:classif+'/'+v.length,u:'classificadas',s:fun.length+' entram no funil · '+naN+' não se aplica · '+aclN+' a classificar', e:[eFun,'entregas no funil (as '+fun.length+' normas)',eAcl?'+'+eAcl+' nas '+aclN+' a classificar':'nenhuma a classificar']},
-      {n:varejo,u:'na fatia do varejo','s':'Varejo + Conjunto'+(classif?' · '+pc(varejo,classif)+' das classificadas':''), e:[mT,'entregas do varejo',pc(mT,eFun)+' das '+eFun+' do funil']},
-      {n:mOk+'/'+minhas.length,u:'do varejo com tudo atendido',s:(minhas.length-mOk)+' com entrega em aberto', e:[mD+'/'+mT,'entregas atendidas',(mT-mD)+' em aberto ('+pc(mT-mD,mT)+')'], ec:'okc'},
-      {n:mSemN,u:'do varejo com entrega em aberto sem issue',s:'mesmo grupo do funil', e:[mSem,'entregas em aberto sem épico ou história',mAtr+' já atrasada'+(mAtr===1?'':'s')], hot:true},
-      {n:rev,u:'versões novas a revisar',s:'normas com versão nova desde a última revisão'}
-    ];
-    $('kpis').innerHTML=K.map(k=>'<div class="kpi">'+(k.e?'<span class="kl">Normas</span>':'')+'<b'+(k.hot?' class="hot"':'')+'>'+k.n+'</b><span>'+k.u+'</span><small>'+k.s+'</small>'
-      +(k.e?'<div class="ke"><span class="kl">Entregas</span><b class="'+(k.hot?'hot':(k.ec||''))+'">'+k.e[0]+'</b><span>'+k.e[1]+'</span><small>'+k.e[2]+'</small></div>':'')+'</div>').join('');
+    const pair=(a,b)=>'<div class="kp"><div><b>'+a+'</b><span>normas</span></div><div><b>'+b+'</b><span>entregas</span></div></div>';
+    const bar=(lab,d,f)=>'<div class="kb-r"><span>'+lab+'</span><div class="kb">'+(d?'<i class="d" style="flex:'+d+'" title="Entregue: '+d+'">'+d+'</i>':'')+(f?'<i class="f" style="flex:'+f+'" title="Falta: '+f+'">'+f+'</i>':'')+(!d&&!f?'<i style="flex:1;color:var(--muted)">—</i>':'')+'</div></div>';
+    const revL=v.filter(needsReview);
+    $('kpis').innerHTML=
+      '<div class="kpi"><span class="kq">Mapeadas</span>'+pair(v.length,eTot)+'<small>normas vigentes do portal</small></div>'
+      +'<div class="kpi kv"><span class="kq">Fatia do varejo</span>'+pair(minhas.length,mT)+'<small>Varejo + Conjunto · '+pc(minhas.length,v.length)+' das normas e '+pc(mT,eTot)+' das entregas mapeadas</small></div>'
+      +'<div class="kpi kw"><span class="kq">Varejo: entregue × falta</span>'+bar('Normas',mOk,minhas.length-mOk)+bar('Entregas',mD,mT-mD)+'<div class="kl2"><span><i style="background:var(--ok)"></i>Entregue</span><span><i style="background:var(--pend)"></i>Falta</span></div></div>'
+      +'<div class="kpi ka"><span class="kq">A descobrir</span>'+pair(aclN,eAcl)+'<small>'+(aclN?'ainda “A classificar”: não sei se são do varejo nem se já foram entregues · <a href="#" data-pdf="acl">ver na lista</a>':'todas as normas classificadas')+'</small></div>'
+      +(revL.length?'<div class="krev">'+revL.length+' norma'+(revL.length>1?'s':'')+' com versão nova a revisar: '+revL.map(c=>'<a href="#nt-'+c.id+'" data-jump="'+c.id+'">'+esc(c.chave)+'</a>').join(' · ')+'</div>':'');
   }
 
   const sitLabel = c => SITK2N[normaSit(c,RM.ref||today)] || 'Sem data';
