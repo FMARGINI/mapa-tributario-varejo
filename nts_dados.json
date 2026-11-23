@@ -1,5 +1,5 @@
 {
- "gerado": "2026-11-10",
+ "gerado": "2026-11-23",
  "meses": [
   "setembro/2025",
   "outubro/2025",
@@ -13369,9 +13369,10 @@
    ],
    "obs": [],
    "nkey": "CT_e_NT_2026_004_RTC",
-   "vigente": true,
-   "superada_por": "",
+   "vigente": false,
+   "superada_por": "2026-11-08",
    "versoes": [
+    "2026-11-08",
     "2026-10-11"
    ],
    "subst_nt": ""
@@ -13477,9 +13478,10 @@
     "Implantação em teste 26/10/2026 e produção 16/11/2026 (texto do card e informativo 2026-10-03)."
    ],
    "nkey": "NF_e_NT_2026_007_contribuinte_exclusivo_do_IBS_CBS",
-   "vigente": true,
-   "superada_por": "",
+   "vigente": false,
+   "superada_por": "2026-11-07",
    "versoes": [
+    "2026-11-07",
     "2026-10-13",
     "2026-10-28"
    ],
@@ -13727,9 +13729,10 @@
    "vigencias": [],
    "obs": [],
    "nkey": "NFCom_NT_2026_004_RTC",
-   "vigente": true,
-   "superada_por": "",
+   "vigente": false,
+   "superada_por": "2026-11-04",
    "versoes": [
+    "2026-11-04",
     "2026-10-17"
    ],
    "subst_nt": ""
@@ -13841,9 +13844,10 @@
    "vigencias": [],
    "obs": [],
    "nkey": "DF_e_IT_2025_002_cClassTrib",
-   "vigente": true,
-   "superada_por": "",
+   "vigente": false,
+   "superada_por": "2026-11-05",
    "versoes": [
+    "2026-11-05",
     "2026-10-20"
    ],
    "subst_nt": ""
@@ -14337,8 +14341,9 @@
    ],
    "nkey": "NF_e_NT_2026_007_contribuinte_exclusivo_do_IBS_CBS",
    "vigente": false,
-   "superada_por": "2026-10-13",
+   "superada_por": "2026-11-07",
    "versoes": [
+    "2026-11-07",
     "2026-10-13",
     "2026-10-28"
    ],
@@ -14440,6 +14445,424 @@
    "versoes": [
     "2026-11-02",
     "2026-10-05"
+   ],
+   "subst_nt": ""
+  },
+  {
+   "id": "2026-11-03",
+   "ano": 2026,
+   "mes": "novembro",
+   "titulo": "EFD-Contribuições - Publicação da Nota Técnica 13/2026 - Regras de Escrituração e Transição para a CBS",
+   "data_item": "19/11/2026",
+   "versao": "Não se aplica",
+   "versao_txt": "Não se aplica",
+   "documento": "EFD-Contribuições",
+   "chave": "EFD-Contribuições | NT 13/2026 (transição para a CBS)",
+   "tema": "Apuração IBS/CBS",
+   "uf": "",
+   "esfera": "Federal",
+   "tributos": "EFD- Contribuições",
+   "norma": "Nota Técnica 13/2026",
+   "publicacao": "04/11/2026",
+   "especificacao": "15/11/2026",
+   "segmentos": [
+    "Todos"
+   ],
+   "impactos": [
+    "Alteração de Layout",
+    "Cálculos",
+    "Validação",
+    "Procedimentos"
+   ],
+   "resumo": "Adequações da EFD-Contribuições para continuidade de escrituração em 2027, controle de créditos presumidos de CBS e validações de saldos credores.",
+   "vig_h": "",
+   "vig_p": "",
+   "vig_p_origem": "",
+   "subitens": [
+    {
+     "n": "1",
+     "t": "Adequações da EFD-Contribuições decorrentes da transição para a CBS- Alterações previstas para 2026",
+     "ref": "",
+     "nota": ""
+    },
+    {
+     "n": "2",
+     "t": "Adequações da EFD-Contribuições decorrentes da transição para a CBS- Alterações previstas para 2027",
+     "ref": "",
+     "nota": ""
+    }
+   ],
+   "vigencias": [],
+   "obs": [
+    "Card sem vigência e sem Data de Obrigatoriedade nas especificações: entrega 'sem data'. O texto cita alterações previstas para 2026 e 2027 (fim da apuração do PIS/Cofins em 31/12/2026; estoque de abertura em 01/01/2027 para o crédito presumido de CBS). Campo Norma = 'Nota Técnica 13/2026' (o 13 é o número da NT, não versão)."
+   ],
+   "nkey": "EFD_Contribuicoes_NT_13_2026_transicao_para_a_CBS",
+   "vigente": true,
+   "superada_por": "",
+   "versoes": [
+    "2026-11-03"
+   ],
+   "subst_nt": ""
+  },
+  {
+   "id": "2026-11-04",
+   "ano": 2026,
+   "mes": "novembro",
+   "titulo": "NFCom - Publicados os schemas e a versão 1.01 da Nota Técnica 2026.004 - Valor Líquido",
+   "data_item": "19/11/2026",
+   "versao": "1.01",
+   "versao_txt": "1.01",
+   "documento": "NFCom",
+   "chave": "NFCom | NT 2026.004 (RTC)",
+   "tema": "Reforma Tributária - DF-e",
+   "uf": "",
+   "esfera": "Federal",
+   "tributos": "NFCom",
+   "norma": "versão 1.01 da Nota Técnica 2026.004",
+   "publicacao": "31/10/2026",
+   "especificacao": "12/11/2026",
+   "segmentos": [
+    "Todos"
+   ],
+   "impactos": [
+    "Alteração de Layout",
+    "Validação",
+    "Procedimentos"
+   ],
+   "resumo": "A versão 1.01 da Nota Técnica 2026.004 apresenta ajustes em relação ao cronograma de implantação e às orientações de composição dos valores da NFCom. Alterações contempladas: Ajuste da data de homologação; Alteração da regra de composição do valor total do DFe; Retirada da orientação de inclusão de IBS e CBS na composição do campo vProd.",
+   "vig_h": "",
+   "vig_p": "16/11/2026",
+   "vig_p_origem": "Data de Obrigatoriedade da especificação",
+   "subitens": [
+    {
+     "n": "1",
+     "t": "Nota Técnica 2026.004 - v1.01",
+     "ref": "",
+     "nota": ""
+    }
+   ],
+   "vigencias": [
+    {
+     "tipo": "Obrigatoriedade",
+     "data": "16/11/2026",
+     "desc": "Spec 1: Nota Técnica 2026.004 - v1.01",
+     "fonte": "Data de Obrigatoriedade da spec"
+    }
+   ],
+   "obs": [
+    "v1.01: ajuste da data de homologação (até 26/10/2026), produção 16/11/2026; restabelece IBS/CBS no valor total do DF-e a partir de 2027 e retira a orientação de incluí-los no vProd. O bloco de datas do card traz 'Produção: 16/11/2026 14/12/2026'; o painel usa 16/11/2026 (Data de Obrigatoriedade da especificação e texto 'Produção: 16/11/2026').",
+    "Card sem vigência de produção: o painel usa a Data de Obrigatoriedade da especificação (16/11/2026) como data de exigência."
+   ],
+   "nkey": "NFCom_NT_2026_004_RTC",
+   "vigente": true,
+   "superada_por": "",
+   "versoes": [
+    "2026-11-04",
+    "2026-10-17"
+   ],
+   "subst_nt": ""
+  },
+  {
+   "id": "2026-11-05",
+   "ano": 2026,
+   "mes": "novembro",
+   "titulo": "[INFORMATIVA] BP-e, CT-e, NF3-e,NFC-e, NF-e, NFGás, NFÁg, NFCom, NFS-e - Publicado a versão 1.71 do Informe Técnico 2025.002 - Tabela de Classificação Tributária",
+   "data_item": "19/11/2026",
+   "versao": "1.71",
+   "versao_txt": "1.71",
+   "documento": "DF-e",
+   "chave": "DF-e | IT 2025.002 (cClassTrib)",
+   "tema": "Reforma Tributária - DF-e",
+   "uf": "",
+   "esfera": "Federal",
+   "tributos": "BP-e, CT-e, NF3-e,NFC-e, NF-e, NFGás, NFÁg, NFCom, NFS-e",
+   "norma": "versão 1.71 do Informe Técnico 2025.002",
+   "publicacao": "29/10/2026",
+   "especificacao": "29/10/2026",
+   "segmentos": [
+    "Todos"
+   ],
+   "impactos": [
+    "Procedimentos"
+   ],
+   "resumo": "BP-e, CT-e, NF3-e,NFC-e, NF-e, NFGás, NFÁg, NFCom, NFS-e - Publicado a versão 1.71 do Informe Técnico 2025.002 - Tabela de Classificação Tributária",
+   "vig_h": "",
+   "vig_p": "30/10/2026",
+   "vig_p_origem": "texto do card",
+   "subitens": [],
+   "vigencias": [],
+   "obs": [
+    "[INFORMATIVA] v1.71 do IT 2025.002 (tabela cClassTrib). Texto do card: 'Homologação: Até 30/10/26 / Produção: Até 30/10/26' (ativação de indDIR 410003 e 410999); o painel usa 30/10/2026 como exigência."
+   ],
+   "nkey": "DF_e_IT_2025_002_cClassTrib",
+   "vigente": true,
+   "superada_por": "",
+   "versoes": [
+    "2026-11-05",
+    "2026-10-20"
+   ],
+   "subst_nt": ""
+  },
+  {
+   "id": "2026-11-06",
+   "ano": 2026,
+   "mes": "novembro",
+   "titulo": "[INFORMATICA] NF-e/NFC-e - Publicado a versão 1.01 da Nota Técnica 2026.006 - Vinculação com a Transação de Pagamento do DF-e - Alteração das datas de implantação em Homologação e Produção",
+   "data_item": "19/11/2026",
+   "versao": "1.01",
+   "versao_txt": "1.01",
+   "documento": "NF-e/NFC-e",
+   "chave": "NF-e/NFC-e | NT 2026.006 (vinculação com a transação de pagamento)",
+   "tema": "Vinculação do pagamento ao DF-e",
+   "uf": "",
+   "esfera": "Federal",
+   "tributos": "NF-e/NFC-e",
+   "norma": "versão 1.01 da Nota Técnica 2026.006",
+   "publicacao": "29/10/2026",
+   "especificacao": "29/10/2026",
+   "segmentos": [
+    "Todos"
+   ],
+   "impactos": [
+    "Alteração de Layout"
+   ],
+   "resumo": "Publicado a versão 1.01 da Nota Técnica 2026.006 - Vinculação com a Transação de Pagamento do DF-e - Alteração das datas de implantação em Homologação e Produção",
+   "vig_h": "",
+   "vig_p": "",
+   "vig_p_origem": "",
+   "subitens": [],
+   "vigencias": [],
+   "obs": [
+    "[INFORMATIVA] v1.01 da NT 2026.006: alteração das datas de implantação em homologação e produção, mas o card não informa as datas novas: entrega 'sem data'. O informativo de out/2026 (card 2026-10-03) dava produção da v1.00 em 16/11/2026. Ajustar a exigência no painel quando a data for confirmada."
+   ],
+   "nkey": "NF_e_NFC_e_NT_2026_006_vinculacao_com_a_transacao_de_pagamento",
+   "vigente": true,
+   "superada_por": "",
+   "versoes": [
+    "2026-11-06"
+   ],
+   "subst_nt": ""
+  },
+  {
+   "id": "2026-11-07",
+   "ano": 2026,
+   "mes": "novembro",
+   "titulo": "[INFORMATIVA] NF-e/NFC-e - Publicado a versão 1.11 da Nota Técnica 2026.007 - Emissão de NF-e por contribuinte exclusivo do IBS/CBS - Alteração de datas",
+   "data_item": "19/11/2026",
+   "versao": "1.11",
+   "versao_txt": "1.11",
+   "documento": "NF-e",
+   "chave": "NF-e | NT 2026.007 (contribuinte exclusivo do IBS/CBS)",
+   "tema": "Reforma Tributária - DF-e",
+   "uf": "",
+   "esfera": "Federal",
+   "tributos": "NF-e/NFC-e",
+   "norma": "Nota Técnica 2026.007 V 1.11",
+   "publicacao": "29/10/2026",
+   "especificacao": "29/10/2026",
+   "segmentos": [
+    "Todos"
+   ],
+   "impactos": [
+    "Procedimentos",
+    "Validação"
+   ],
+   "resumo": "NF-e/NFC-e - Publicado a versão 1.11 da Nota Técnica 2026.007 - Emissão de NF-e por contribuinte exclusivo do IBS/CBS - Alteração de datas",
+   "vig_h": "",
+   "vig_p": "16/11/2026",
+   "vig_p_origem": "texto do card",
+   "subitens": [],
+   "vigencias": [],
+   "obs": [
+    "[INFORMATIVA] v1.11 da NT 2026.007 (alteração de datas). O ICT informa que está confirmando as datas com o fisco porque o 'Histórico de Alterações' da v1.11 traz as mesmas datas da v1.10; o painel mantém a produção da v1.10 (16/11/2026). A 'Descrição completa' do card cita v1.12."
+   ],
+   "nkey": "NF_e_NT_2026_007_contribuinte_exclusivo_do_IBS_CBS",
+   "vigente": true,
+   "superada_por": "",
+   "versoes": [
+    "2026-11-07",
+    "2026-10-13",
+    "2026-10-28"
+   ],
+   "subst_nt": ""
+  },
+  {
+   "id": "2026-11-08",
+   "ano": 2026,
+   "mes": "novembro",
+   "titulo": "CT-e -Publicado a versão 1.01 da Nota Técnica 2026.004 - Valor Líquido",
+   "data_item": "19/11/2026",
+   "versao": "1.01",
+   "versao_txt": "1.01",
+   "documento": "CT-e",
+   "chave": "CT-e | NT 2026.004 (RTC)",
+   "tema": "Reforma Tributária - DF-e",
+   "uf": "",
+   "esfera": "Federal",
+   "tributos": "CT-e",
+   "norma": "Nota Técnica 2026.004 versão 1.01",
+   "publicacao": "29/10/2026",
+   "especificacao": "03/11/2026",
+   "segmentos": [
+    "Todos"
+   ],
+   "impactos": [
+    "Cálculos",
+    "Procedimentos",
+    "Validação"
+   ],
+   "resumo": "CT-e -Publicado a versão 1.01 da Nota Técnica 2026.004 – Valor Líquido Esta Nota Técnica tem por objetivo de ampliar a transparência na formação do preço da operação. Foi criado o campo Valor Líquido da Prestação. Nesta versão 1.01, o conceito do vPrest volta a ser como era antes, desfazendo a alteração trazida na versão 1.00. Além disso, traz outras alterações, conforme mostrado a seguir: Resumo das alterações: Ajuste na Data de produção da NT 2026.004 e ajuste nas regras de validação da EPEC; Alteração da data de Homologação das alterações da estrutura do CTe Simplificado; A regra do valor total do DFe retorna a soma de IBS e CBS a partir de 2027; Retirada orientação de inclusão de IBS e CBS na composição do vTPrest; Inclusão do grupo de informações de Multa e Juros do CTe; Inclusão do Campo \"descEvento\" no Evento de Apropriação do Crédito Presumido.",
+   "vig_h": "",
+   "vig_p": "14/12/2026",
+   "vig_p_origem": "Data de Obrigatoriedade da especificação",
+   "subitens": [
+    {
+     "n": "1",
+     "t": "Ajuste na Data de produção da NT 2026.004 e ajuste nas regras de validação da EPEC",
+     "ref": "",
+     "nota": ""
+    },
+    {
+     "n": "2",
+     "t": "Alteração de data de Homologação das alterações relacionadas à Estrutura do CTe Simplificado",
+     "ref": "",
+     "nota": ""
+    },
+    {
+     "n": "3",
+     "t": "A regra do valor total do DFe retorna a soma de IBS e CBS a partir de 2027",
+     "ref": "",
+     "nota": ""
+    },
+    {
+     "n": "4",
+     "t": "Retirada orientação de inclusão de IBS e CBS na composição do vTPrest",
+     "ref": "",
+     "nota": ""
+    },
+    {
+     "n": "5",
+     "t": "Inclusão do grupo de informações de Multa e Juros do CTe",
+     "ref": "",
+     "nota": ""
+    },
+    {
+     "n": "6",
+     "t": "Inclusão do Campo \"descEvento\" no Evento de Apropriação do Crédito Presumido",
+     "ref": "",
+     "nota": ""
+    }
+   ],
+   "vigencias": [
+    {
+     "tipo": "Obrigatoriedade",
+     "data": "14/12/2026",
+     "desc": "Spec 1: Ajuste na Data de produção da NT 2026.004 e ajuste nas regras de validação da EPEC",
+     "fonte": "Data de Obrigatoriedade da spec"
+    }
+   ],
+   "obs": [
+    "v1.01: o vPrest volta ao conceito anterior (desfaz a v1.00); ajuste da produção da NT e das regras da EPEC, homologação do CT-e Simplificado, IBS/CBS no total do DF-e a partir de 2027, grupo de multa e juros, descEvento no evento de crédito presumido. Data de Obrigatoriedade das especificações: 14/12/2026.",
+    "Card sem vigência de produção: o painel usa a Data de Obrigatoriedade da especificação (14/12/2026) como data de exigência."
+   ],
+   "nkey": "CT_e_NT_2026_004_RTC",
+   "vigente": true,
+   "superada_por": "",
+   "versoes": [
+    "2026-11-08",
+    "2026-10-11"
+   ],
+   "subst_nt": ""
+  },
+  {
+   "id": "2026-11-09",
+   "ano": 2026,
+   "mes": "novembro",
+   "titulo": "CT-e -Publicado a versão 1.00 da Nota Técnica 2026.005 – Simples Nacional",
+   "data_item": "19/11/2026",
+   "versao": "1.00",
+   "versao_txt": "1.00",
+   "documento": "CT-e",
+   "chave": "CT-e | NT 2026.005 (Simples Nacional)",
+   "tema": "Reforma Tributária - DF-e",
+   "uf": "",
+   "esfera": "Federal",
+   "tributos": "CT-e",
+   "norma": "Nota Técnica 2026.005 v1.00",
+   "publicacao": "29/10/2026",
+   "especificacao": "03/11/2026",
+   "segmentos": [
+    "Todos"
+   ],
+   "impactos": [
+    "Alteração de Layout",
+    "Cálculos",
+    "Validação",
+    "Nova obrigação",
+    "Procedimentos",
+    "Outros"
+   ],
+   "resumo": "A NT 2026.005 v1.00 faz parte das adequações do CT-e à Reforma Tributária do Consumo e estabelece alterações no leiaute e nas regras de validação para contribuintes do Simples Nacional. Sua principal mudança está na inclusão de informações específicas de IBS e CBS, permitindo a identificação da receita bruta e dos valores dos tributos por item, além da criação de eventos para acompanhamento da tributação do Simples Nacional pela Administração Tributária. Introdução; Criação do campo tpRegimeIBSCBS para identificação do regime de apuração; Orientação de preenchimento do grupo IBSCBS no fornecimento; Grupo de Totais do DFe - CT-e Simplificado; Evento de Tributação do Simples Nacional; Evento de Cancelamento da Tributação do Simples Nacional; Regra de Validação para CT-e Complementar;",
+   "vig_h": "26/10/2026",
+   "vig_p": "14/12/2026",
+   "vig_p_origem": "",
+   "subitens": [
+    {
+     "n": "1",
+     "t": "CT-e - Nota Técnica 2026.005, v.1.00",
+     "ref": "",
+     "nota": ""
+    }
+   ],
+   "vigencias": [],
+   "obs": [],
+   "nkey": "CT_e_NT_2026_005_Simples_Nacional",
+   "vigente": true,
+   "superada_por": "",
+   "versoes": [
+    "2026-11-09"
+   ],
+   "subst_nt": ""
+  },
+  {
+   "id": "2026-11-10",
+   "ano": 2026,
+   "mes": "novembro",
+   "titulo": "[INFORMATIVA] NFS-e Padrão Nacional - Divulgada atualização da tabela de correlação de códigos (cCLASSTrib, indOp, código de serviço e NBS)",
+   "data_item": "18/11/2026",
+   "versao": "N/A",
+   "versao_txt": "N/A",
+   "documento": "NFS-e",
+   "chave": "NFS-e | Anexo VIII (correlação cClassTrib, indOp e NBS)",
+   "tema": "Reforma Tributária - DF-e",
+   "uf": "",
+   "esfera": "Federal",
+   "tributos": "NFS-e",
+   "norma": "Anexo VIII da NFS-e Nacional",
+   "publicacao": "25/10/2026",
+   "especificacao": "26/10/2026",
+   "segmentos": [
+    "Todos"
+   ],
+   "impactos": [
+    "Procedimentos",
+    "Validação",
+    "Outros"
+   ],
+   "resumo": "O Portal Nacional da NFS-e atualizou o Anexo VIII, que relaciona os códigos da LC nº 116/2003, NBS, cClassTrib e Indicador de Operação (indOp).",
+   "vig_h": "",
+   "vig_p": "",
+   "vig_p_origem": "",
+   "subitens": [],
+   "vigencias": [],
+   "obs": [
+    "[INFORMATIVA] Atualização do Anexo VIII da NFS-e Nacional (correlação LC 116/2003, NBS, cClassTrib e indOp). Card sem data de vigência: entrega 'sem data'."
+   ],
+   "nkey": "NFS_e_Anexo_VIII_correlacao_cClassTrib_indOp_e_NBS",
+   "vigente": true,
+   "superada_por": "",
+   "versoes": [
+    "2026-11-10"
    ],
    "subst_nt": ""
   }
